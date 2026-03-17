@@ -1,4 +1,5 @@
 import { NAV_ITEMS } from '../constants'
+import Logo from './Logo'
 import { useAuth } from '../context/AuthContext'
 
 export default function Layout({ active, onChange, children }) {
@@ -13,7 +14,7 @@ export default function Layout({ active, onChange, children }) {
         {/* Logo */}
         <div style={{ padding: '20px 18px 14px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>💊</div>
+            <Logo size={36} />
             <div>
               <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text)', letterSpacing: -0.3 }}>MedSchedule</div>
               <div style={{ fontSize: 11, color: 'var(--text3)' }}>AI Medical Assistant</div>

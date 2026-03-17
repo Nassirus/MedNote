@@ -1,87 +1,230 @@
 import { useState } from 'react'
 import { TYPE_CONFIG } from '../constants'
+import { format, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isBefore } from 'date-fns'
+import { ru } from 'date-fns/locale'
 
-const EMPTY = { type: 'routine', title: '', time: '08:00', notes: '', freq: 'Ежедневно', date: '' }
+const EMPTY = { type: 'medication', title: '', time: '08:00', notes: '', freq: 'Ежедневно' }
+const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']
 
 export default function AddItemModal({ onAdd, onClose }) {
-  const [form, setForm] = useState(EMPTY)
-  const [err, setErr] = useState('')
+  const [step, setStep]       = useState(1)           // 1 = type+title, 2 = dates+time
+  const [form, setForm]       = useState(EMPTY)
+  const [dates, setDates]     = useState([])           // selected dates
+  const [recurring, setRecurring] = useState('daily') // daily | custom
+  const [err, setErr]         = useState('')
+  const [month, setMonth]     = useState(new Date())
 
-  function set(k, v) { setForm(p => ({ ...p, [k]: v })); setErr('') }
+  const cfg = TYPE_CONFIG[form.type] || TYPE_CONFIG.medication
+
+  const calStart = startOfWeek(startOfMonth(month), { weekStartsOn: 1 })
+  const calEnd   = endOfWeek(endOfMonth(month), { weekStartsOn: 1 })
+  const calDays  = eachDayOfInterval({ start: calStart, end: calEnd })
+
+  function toggleDate(day) {
+    if (isBefore(day, addDays(new Date(), -1))) return // no past dates
+    setDates(prev => {
+      const already = prev.some(d => isSameDay(d, day))
+      return already ? prev.filter(d => !isSameDay(d, day)) : [...prev, day]
+    })
+  }
+
+  function next() {
+    if (!form.title.trim()) { setErr('Введите название'); return }
+    setErr(''); setStep(2)
+  }
 
   function submit() {
-    if (!form.title.trim()) { setErr('Введите название'); return }
-    onAdd(form)
+    if (recurring === 'custom' && dates.length === 0) {
+      setErr('Выберите хотя бы одну дату'); return
+    }
+    if (recurring === 'daily') {
+      onAdd({ ...form, date: null, freq: form.freq })
+    } else {
+      // Add one item per selected date
+      dates.sort((a, b) => a - b).forEach(d => {
+        onAdd({ ...form, date: format(d, 'yyyy-MM-dd'), freq: 'Разово' })
+      })
+    }
     onClose()
   }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+      <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '92dvh', overflow: 'auto' }}>
+
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>Добавить в расписание</h3>
-          <button onClick={onClose} style={{ background: 'var(--surface2)', border: 'none', borderRadius: '50%', width: 32, height: 32, fontSize: 16, color: 'var(--text2)' }}>✕</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {step === 2 && (
+              <button onClick={() => { setStep(1); setErr('') }} style={{ background: 'var(--surface2)', border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, color: 'var(--text2)' }}>←</button>
+            )}
+            <h3 style={{ fontWeight: 700, fontSize: 17, color: 'var(--text)' }}>
+              {step === 1 ? 'Что добавить?' : 'Когда?'}
+            </h3>
+          </div>
+          <button onClick={onClose} style={{ background: 'var(--surface2)', border: 'none', borderRadius: '50%', width: 30, height: 30, fontSize: 15, color: 'var(--text2)' }}>✕</button>
         </div>
 
-        {/* Type selector */}
-        <label className="label">Тип</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginBottom: 14 }}>
-          {Object.entries(TYPE_CONFIG).map(([k, v]) => (
-            <button key={k} onClick={() => set('type', k)} style={{
-              padding: '8px 4px', borderRadius: 8, border: `1.5px solid ${form.type === k ? v.color : 'var(--border)'}`,
-              background: form.type === k ? v.bg : 'white', cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3
-            }}>
-              <span style={{ fontSize: 18 }}>{v.icon}</span>
-              <span style={{ fontSize: 10, fontWeight: 600, color: form.type === k ? v.color : 'var(--text3)' }}>{v.label}</span>
-            </button>
+        {/* Step indicator */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+          {[1,2].map(s => (
+            <div key={s} style={{ flex: 1, height: 3, borderRadius: 99, background: s <= step ? 'var(--primary)' : 'var(--border)' }} />
           ))}
         </div>
 
-        {/* Title */}
-        <label className="label">Название *</label>
-        <input className="input" value={form.title} onChange={e => set('title', e.target.value)}
-          placeholder={`Например: ${TYPE_CONFIG[form.type]?.label}`}
-          style={{ marginBottom: err ? 4 : 14 }} />
-        {err && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{err}</p>}
+        {/* ── STEP 1: Type + Title + Time ── */}
+        {step === 1 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Type selector */}
+            <div>
+              <div className="label" style={{ marginBottom: 8 }}>Тип</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+                {Object.entries(TYPE_CONFIG).map(([k, v]) => (
+                  <button key={k} onClick={() => setForm(p => ({ ...p, type: k }))} style={{
+                    padding: '10px 4px', borderRadius: 10,
+                    border: `2px solid ${form.type === k ? v.color : 'var(--border)'}`,
+                    background: form.type === k ? v.bg : 'white',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4
+                  }}>
+                    <span style={{ fontSize: 20 }}>{v.icon}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: form.type === k ? v.color : 'var(--text3)' }}>{v.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Time + Freq */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-          <div>
-            <label className="label">Время</label>
-            <input type="time" className="input" value={form.time} onChange={e => set('time', e.target.value)} />
+            {/* Title */}
+            <div>
+              <div className="label">Название *</div>
+              <input className="input" value={form.title}
+                onChange={e => { setForm(p => ({ ...p, title: e.target.value })); setErr('') }}
+                placeholder={`Например: ${cfg.label}...`}
+                autoFocus
+                onKeyDown={e => e.key === 'Enter' && next()}
+              />
+              {err && <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 5 }}>{err}</p>}
+            </div>
+
+            {/* Time */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <div className="label">Время</div>
+                <input type="time" className="input" value={form.time}
+                  onChange={e => setForm(p => ({ ...p, time: e.target.value }))} />
+              </div>
+              <div>
+                <div className="label">Примечание</div>
+                <input className="input" value={form.notes}
+                  onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
+                  placeholder="Доп. инфо..." />
+              </div>
+            </div>
+
+            <button className="btn btn-primary" onClick={next} style={{ width: '100%', padding: 12, fontSize: 14 }}>
+              Далее — выбрать даты →
+            </button>
           </div>
-          <div>
-            <label className="label">Частота</label>
-            <select className="input" value={form.freq} onChange={e => set('freq', e.target.value)}>
-              <option>Ежедневно</option>
-              <option>Раз в неделю</option>
-              <option>Раз в 2 дня</option>
-              <option>По будням</option>
-              <option>По выходным</option>
-              <option>Разово</option>
-            </select>
+        )}
+
+        {/* ── STEP 2: Date picker ── */}
+        {step === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Item preview */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px', background: cfg.bg, borderRadius: 10, border: `1px solid ${cfg.color}33` }}>
+              <span style={{ fontSize: 20 }}>{cfg.icon}</span>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{form.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>⏰ {form.time} · {cfg.label}</div>
+              </div>
+            </div>
+
+            {/* Recurring toggle */}
+            <div style={{ display: 'flex', background: 'var(--surface2)', borderRadius: 10, padding: 3 }}>
+              {[['daily', '🔄 Регулярно'], ['custom', '📅 Конкретные даты']].map(([k, l]) => (
+                <button key={k} onClick={() => { setRecurring(k); setErr('') }} style={{
+                  flex: 1, padding: '8px', borderRadius: 8, border: 'none', fontWeight: 600, fontSize: 12,
+                  background: recurring === k ? 'white' : 'transparent',
+                  color: recurring === k ? 'var(--primary)' : 'var(--text3)',
+                  boxShadow: recurring === k ? 'var(--shadow)' : 'none', transition: 'all .15s'
+                }}>{l}</button>
+              ))}
+            </div>
+
+            {/* DAILY — frequency picker */}
+            {recurring === 'daily' && (
+              <div>
+                <div className="label">Частота</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['Ежедневно','По будням','По выходным','Раз в неделю','Раз в 2 дня'].map(f => (
+                    <button key={f} onClick={() => setForm(p => ({ ...p, freq: f }))} style={{
+                      padding: '7px 12px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 600,
+                      background: form.freq === f ? 'var(--primary)' : 'var(--surface2)',
+                      color: form.freq === f ? 'white' : 'var(--text3)', transition: 'all .12s'
+                    }}>{f}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CUSTOM — mini calendar with multi-select */}
+            {recurring === 'custom' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <button onClick={() => setMonth(p => new Date(p.getFullYear(), p.getMonth()-1, 1))}
+                    style={{ background: 'var(--surface2)', border: 'none', borderRadius: 7, width: 28, height: 28, fontSize: 14 }}>‹</button>
+                  <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', textTransform: 'capitalize' }}>
+                    {format(month, 'LLLL yyyy', { locale: ru })}
+                  </span>
+                  <button onClick={() => setMonth(p => new Date(p.getFullYear(), p.getMonth()+1, 1))}
+                    style={{ background: 'var(--surface2)', border: 'none', borderRadius: 7, width: 28, height: 28, fontSize: 14 }}>›</button>
+                </div>
+
+                {/* DOW headers */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>
+                  {DOW.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 10, fontWeight: 600, color: 'var(--text3)', padding: '2px 0' }}>{d}</div>)}
+                </div>
+
+                {/* Days */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
+                  {calDays.map(day => {
+                    const isPast    = isBefore(day, addDays(new Date(), -1))
+                    const isSel     = dates.some(d => isSameDay(d, day))
+                    const isCurMon  = day.getMonth() === month.getMonth()
+                    const itIsToday = isToday(day)
+                    return (
+                      <button key={day.toISOString()} onClick={() => !isPast && toggleDate(day)} style={{
+                        aspectRatio: '1', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: isSel || itIsToday ? 700 : 400,
+                        background: isSel ? 'var(--primary)' : itIsToday ? 'var(--primary-light)' : 'transparent',
+                        color: isSel ? 'white' : itIsToday ? 'var(--primary)' : isCurMon ? 'var(--text)' : 'var(--text3)',
+                        opacity: isPast ? 0.3 : 1, cursor: isPast ? 'not-allowed' : 'pointer',
+                        transition: 'all .1s'
+                      }}>{format(day, 'd')}</button>
+                    )
+                  })}
+                </div>
+
+                {/* Selected dates chips */}
+                {dates.length > 0 && (
+                  <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                    {dates.sort((a,b)=>a-b).map(d => (
+                      <span key={d.toISOString()} onClick={() => toggleDate(d)} style={{
+                        padding: '3px 8px', borderRadius: 20, background: 'var(--primary-light)',
+                        color: 'var(--primary)', fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                      }}>
+                        {format(d, 'd MMM', { locale: ru })} ✕
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {err && <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 6 }}>{err}</p>}
+              </div>
+            )}
+
+            <button className="btn btn-primary" onClick={submit} style={{ width: '100%', padding: 12, fontSize: 14 }}>
+              {cfg.icon} Добавить{recurring === 'custom' && dates.length > 0 ? ` (${dates.length} дн.)` : ''}
+            </button>
           </div>
-        </div>
-
-        {/* Date (optional) */}
-        <label className="label">Дата (если разово)</label>
-        <input type="date" className="input" value={form.date} onChange={e => set('date', e.target.value)} style={{ marginBottom: 14 }} />
-
-        {/* Notes */}
-        <label className="label">Примечания</label>
-        <textarea className="input" value={form.notes} onChange={e => set('notes', e.target.value)}
-          placeholder="Доп. информация, дозировка, инструкция..."
-          rows={3} style={{ resize: 'none', marginBottom: 18 }} />
-
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-ghost" onClick={onClose} style={{ flex: 1 }}>Отмена</button>
-          <button className="btn btn-primary" onClick={submit} style={{ flex: 2 }}>
-            {TYPE_CONFIG[form.type]?.icon} Добавить
-          </button>
-        </div>
+        )}
       </div>
     </div>
   )

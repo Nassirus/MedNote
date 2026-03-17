@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { useSchedule } from './hooks/useSchedule'
 import Layout from './components/Layout'
 import Auth from './screens/Auth'
+import Legal from './screens/Legal'
 import Dashboard from './screens/Dashboard'
 import CalendarView from './screens/CalendarView'
 import Upload from './screens/Upload'
@@ -11,7 +12,8 @@ import Profile from './screens/Profile'
 
 function Inner() {
   const { user, loading } = useAuth()
-  const [screen, setScreen] = useState('dashboard')
+  const [screen, setScreen]   = useState('dashboard')
+  const [legalDoc, setLegalDoc] = useState(null)
   const { items, add, toggle, remove, update } = useSchedule()
 
   if (loading) return (
@@ -21,7 +23,18 @@ function Inner() {
     </div>
   )
 
-  if (!user) return <Auth />
+  // Legal pages — доступны без авторизации
+  if (legalDoc) return (
+    <Legal
+      doc={legalDoc}
+      onBack={(newDoc) => {
+        if (newDoc && typeof newDoc === 'string') setLegalDoc(newDoc)
+        else setLegalDoc(null)
+      }}
+    />
+  )
+
+  if (!user) return <Auth onOpenLegal={(doc) => setLegalDoc(doc)} />
 
   function addItems(arr) {
     arr.forEach(item => add(item))
