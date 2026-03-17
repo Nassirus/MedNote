@@ -1,126 +1,123 @@
-# 💊 MedSchedule — MVP
+# 💊 MedSchedule v2.0
 
-AI-помощник по назначениям врача. Анализирует медицинские выписки через **Gemini AI** и автоматически формирует расписание лечения.
-
----
-
-## 🚀 Деплой за 5 шагов
-
-### 1. Получить Gemini API ключ
-1. Перейди на [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-2. Нажми **Create API key**
-3. Скопируй ключ — он понадобится на шаге 4
+AI-помощник по назначениям врача. Gemini AI анализирует выписки, Supabase хранит данные, Vercel деплоит.
 
 ---
 
-### 2. Загрузить на GitHub
+## 🚀 Деплой — пошагово
+
+### Шаг 1 — Supabase (база данных + авторизация)
+
+1. Зайди на [supabase.com](https://supabase.com) → **New project**
+2. Запомни название и придумай пароль БД
+3. После создания: **SQL Editor** → вставь содержимое файла `supabase_schema.sql` → **Run**
+4. Перейди в **Project Settings → API** и скопируй:
+   - `Project URL` → это `VITE_SUPABASE_URL`
+   - `anon / public` ключ → это `VITE_SUPABASE_ANON_KEY`
+
+### Шаг 2 — Gemini API ключ
+
+1. Зайди на [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+2. **Create API key** → скопируй → это `GEMINI_API_KEY`
+
+### Шаг 3 — GitHub
+
 ```bash
-# Инициализировать репозиторий
 git init
 git add .
-git commit -m "feat: MedSchedule MVP"
+git commit -m "feat: MedSchedule v2.0"
 
-# Создать репозиторий на github.com, затем:
+# Создай репо на github.com (без README), затем:
 git remote add origin https://github.com/ВАШ_ЮЗЕР/medschedule.git
 git push -u origin main
 ```
 
----
+### Шаг 4 — Vercel
 
-### 3. Подключить к Vercel
-1. Зайди на [vercel.com](https://vercel.com) → **Add New Project**
-2. Выбери репозиторий `medschedule`
-3. Framework: **Vite** (Vercel определит автоматически)
-4. Нажми **Deploy** (первый деплой без API ключа — ОК)
-
----
-
-### 4. Добавить переменную окружения
-В Vercel → Settings → **Environment Variables**:
+1. [vercel.com](https://vercel.com) → **Add New Project** → выбери репо
+2. Framework: **Vite** (определится автоматически)
+3. **Environment Variables** — добавь все три:
 
 | Name | Value |
 |------|-------|
-| `GEMINI_API_KEY` | `AIza...` (твой ключ) |
+| `VITE_SUPABASE_URL` | `https://xxx.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | `eyJ...` |
+| `GEMINI_API_KEY` | `AIza...` |
 
-После добавления нажми **Redeploy**.
+4. **Deploy** → готово!
 
----
-
-### 5. Установить как PWA (опционально)
+### Шаг 5 — Установить как PWA (опционально)
 - **iPhone**: Safari → Поделиться → «На экран "Домой"»
-- **Android**: Chrome → меню ⋮ → «Добавить на главный экран»
+- **Android**: Chrome → ⋮ → «Добавить на главный экран»
 
 ---
 
-## 🗂 Структура проекта
+## 🗂 Структура
 
 ```
 medschedule/
 ├── api/
-│   └── analyze.js          # Serverless function — Gemini API
+│   └── analyze.js              ← Gemini AI serverless function
 ├── public/
-│   ├── manifest.json       # PWA манифест
+│   ├── manifest.json           ← PWA
 │   ├── icon-192.png
 │   └── icon-512.png
 ├── src/
-│   ├── screens/
-│   │   ├── Onboarding.jsx  # Загрузка документа
-│   │   ├── Analyzing.jsx   # Экран обработки
-│   │   ├── Preview.jsx     # Подтверждение назначений
-│   │   ├── Today.jsx       # Расписание дня
-│   │   ├── Week.jsx        # Недельный вид
-│   │   ├── Analytics.jsx   # Графики и статистика
-│   │   ├── Report.jsx      # Отчёт для врача
-│   │   └── Settings.jsx    # Настройки
+│   ├── context/
+│   │   └── AuthContext.jsx     ← Supabase auth
+│   ├── hooks/
+│   │   ├── useSchedule.js      ← CRUD расписания
+│   │   └── useNotes.js         ← CRUD заметок
 │   ├── components/
-│   │   ├── BottomNav.jsx   # Нижняя навигация
-│   │   └── ItemModal.jsx   # Карточка пункта
-│   ├── constants.js        # Типы, демо-данные
-│   ├── App.jsx             # Главный компонент
-│   ├── main.jsx
-│   └── index.css
-├── index.html
-├── vite.config.js
+│   │   ├── Layout.jsx          ← Sidebar + BottomNav
+│   │   ├── AddItemModal.jsx    ← Добавление пунктов
+│   │   └── ItemModal.jsx       ← Детали / редактирование
+│   ├── screens/
+│   │   ├── Auth.jsx            ← Вход / Регистрация
+│   │   ├── Dashboard.jsx       ← Сегодня
+│   │   ├── CalendarView.jsx    ← Полный календарь
+│   │   ├── Upload.jsx          ← ИИ-анализ документов
+│   │   ├── Notes.jsx           ← Заметки (Notion-style)
+│   │   └── Profile.jsx         ← Профиль + настройки + MedIQ
+│   ├── lib/supabase.js
+│   ├── constants.js
+│   ├── App.jsx
+│   └── main.jsx
+├── supabase_schema.sql         ← SQL для Supabase
+├── .env.example
 ├── vercel.json
 └── package.json
 ```
 
 ---
 
-## 💻 Локальная разработка
+## ✨ Что реализовано в v2.0
 
-```bash
-npm install
-
-# Создать файл .env.local
-echo "GEMINI_API_KEY=ваш_ключ" > .env.local
-
-npm run dev
-# → http://localhost:3000
-```
+| Функция | Статус |
+|---------|--------|
+| Регистрация / Вход (Supabase) | ✅ |
+| Расписание дня с фильтрами | ✅ |
+| Добавление любых типов задач | ✅ |
+| Редактирование / удаление | ✅ |
+| Полный календарь (реальные даты) | ✅ |
+| Загрузка файлов + текста для ИИ | ✅ |
+| Gemini AI анализ выписок | ✅ |
+| Заметки в стиле Notion | ✅ |
+| Профиль + аналитика | ✅ |
+| Синхронизация с MedIQ | ✅ |
+| Настройки уведомлений | ✅ |
+| Responsive (Desktop + Mobile) | ✅ |
+| PWA (установка на экран) | ✅ |
 
 ---
 
 ## 🛠 Стек
 
-| Слой | Технология |
-|------|-----------|
+| | |
+|---|---|
 | Frontend | React 18 + Vite |
-| Графики | Recharts |
+| Auth + DB | Supabase |
 | AI | Google Gemini 1.5 Flash |
-| Деплой | Vercel (Serverless Functions) |
-| PWA | Web App Manifest |
-
----
-
-## 📋 MVP Экраны
-
-- ✅ Онбординг — вставка текста выписки
-- ✅ Gemini AI анализ назначений
-- ✅ Превью и подтверждение
-- ✅ Расписание дня + чекбоксы + прогресс-бар
-- ✅ Добавление/удаление пунктов вручную
-- ✅ Недельный вид с тепловой картой
-- ✅ Аналитика + график самочувствия
-- ✅ Отчёт для врача
-- ✅ Настройки уведомлений и режима тишины
+| Charts | Recharts |
+| Dates | date-fns |
+| Deploy | Vercel |
