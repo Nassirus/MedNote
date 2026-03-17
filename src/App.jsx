@@ -14,7 +14,7 @@ function Inner() {
   const { user, loading } = useAuth()
   const [screen, setScreen]   = useState('dashboard')
   const [legalDoc, setLegalDoc] = useState(null)
-  const { items, add, toggle, remove, update } = useSchedule()
+  const { items, dbError, add, toggle, remove, update } = useSchedule()
 
   if (loading) return (
     <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', flexDirection: 'column', gap: 16 }}>
@@ -23,18 +23,14 @@ function Inner() {
     </div>
   )
 
-  // Legal pages — доступны без авторизации
   if (legalDoc) return (
     <Legal
       doc={legalDoc}
-      onBack={(newDoc) => {
-        if (newDoc && typeof newDoc === 'string') setLegalDoc(newDoc)
-        else setLegalDoc(null)
-      }}
+      onBack={newDoc => typeof newDoc === 'string' ? setLegalDoc(newDoc) : setLegalDoc(null)}
     />
   )
 
-  if (!user) return <Auth onOpenLegal={(doc) => setLegalDoc(doc)} />
+  if (!user) return <Auth onOpenLegal={doc => setLegalDoc(doc)} />
 
   function addItems(arr) {
     arr.forEach(item => add(item))
@@ -42,7 +38,7 @@ function Inner() {
   }
 
   const screenMap = {
-    dashboard: <Dashboard items={items} toggle={toggle} add={add} remove={remove} update={update} />,
+    dashboard: <Dashboard items={items} toggle={toggle} add={add} remove={remove} update={update} dbError={dbError} />,
     calendar:  <CalendarView items={items} add={add} toggle={toggle} remove={remove} update={update} />,
     upload:    <Upload onAddItems={addItems} />,
     notes:     <Notes />,
