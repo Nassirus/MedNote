@@ -149,7 +149,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError 
         </div>
       </div>
 
-      {showAdd && <AddItemModal onAdd={add} onClose={() => setShowAdd(false)} />}
+      {showAdd && <AddItemModal onAdd={add} onClose={() => setShowAdd(false)} existingItems={items} />}
       {selected && (
         <ItemModal
           item={selected}
