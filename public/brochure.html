@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MedNOTE — Брошюра</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#028090;--sea:#00A896;--mint:#02C39A;
+  --dark:#0D3B4A;--darker:#071E26;
+  --light:#E0F4F4;--lighter:#F4FBFB;
+  --white:#FFFFFF;--gray:#64748B;
+  --amber:#F59E0B;--red:#E63946;
+}
+body{font-family:'Nunito',sans-serif;background:#e8e8e8;padding:20px;color:#1A3340;font-size:14px}
+.wrap{max-width:990px;margin:0 auto}
+.lbl{text-align:center;font-size:10px;font-weight:700;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin:14px 0 5px}
+.side{display:flex;width:100%;border-radius:10px;overflow:hidden;box-shadow:0 6px 32px rgba(0,0,0,.18);margin-bottom:24px}
+
+/* PANEL BASE */
+.panel{width:33.333%;display:flex;flex-direction:column;padding:22px 18px;position:relative;overflow:hidden}
+
+/* ── P1 COVER ── */
+.p-cover{background:linear-gradient(155deg,#0D3B4A 0%,#028090 55%,#02C39A 100%);color:#fff;justify-content:space-between}
+.p-cover::before{content:'';position:absolute;top:-50px;right:-50px;width:190px;height:190px;border-radius:50%;background:rgba(2,195,154,.10)}
+.p-cover::after{content:'';position:absolute;bottom:-35px;left:-35px;width:140px;height:140px;border-radius:50%;background:rgba(0,168,150,.09)}
+.logo-row{display:flex;align-items:center;gap:9px;position:relative;z-index:2}
+.logo-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;letter-spacing:-.3px;line-height:1}
+.logo-sub{font-size:8px;font-weight:600;color:rgba(255,255,255,.65);letter-spacing:1.2px;text-transform:uppercase;margin-top:2px}
+.tagline{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;line-height:1.45;position:relative;z-index:2;margin:12px 0 8px}
+.stats-col{display:flex;flex-direction:column;gap:7px;position:relative;z-index:2}
+.stat-box{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:7px 10px}
+.stat-n{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#02C39A;min-width:50px;line-height:1}
+.stat-l{font-size:9.5px;font-weight:600;color:rgba(255,255,255,.82);line-height:1.4}
+.cover-foot{position:relative;z-index:2;font-size:9px;color:rgba(255,255,255,.5);border-top:1px solid rgba(255,255,255,.12);padding-top:10px;line-height:1.9}
+
+/* ── P2 FEATURES ── */
+.p-feat{background:var(--lighter);border-left:1px solid var(--light);border-right:1px solid var(--light)}
+.ptitle{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--dark);margin-bottom:11px;padding-bottom:7px;border-bottom:2px solid var(--mint)}
+.fcard{display:flex;gap:8px;align-items:flex-start;padding:8px 9px 8px 10px;border-left:3px solid var(--teal);background:#fff;border-radius:0 7px 7px 0;margin-bottom:7px;box-shadow:0 1px 4px rgba(2,128,144,.07)}
+.fcard:nth-child(2){border-color:var(--sea)}
+.fcard:nth-child(3){border-color:var(--mint)}
+.fcard:nth-child(4){border-color:var(--amber)}
+.fcard:nth-child(5){border-color:var(--red)}
+.ficon{font-size:16px;flex-shrink:0;margin-top:1px}
+.ftitle{font-size:10.5px;font-weight:700;color:var(--dark)}
+.fdesc{font-size:9.5px;color:var(--gray);margin-top:2px;line-height:1.4}
+.clbl{font-size:10px;font-weight:700;color:var(--teal);margin:11px 0 5px;text-align:center}
+
+/* ── P3 PROBLEM ── */
+.p-prob{background:var(--dark);color:#fff}
+.ptitle-l{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--mint);margin-bottom:11px;padding-bottom:7px;border-bottom:2px solid rgba(2,195,154,.3)}
+.pitem{display:flex;gap:8px;margin-bottom:9px;align-items:flex-start}
+.pnum{width:20px;height:20px;border-radius:50%;background:var(--mint);color:var(--dark);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.ptxt{font-size:10px;line-height:1.45;color:rgba(255,255,255,.85)}
+.psrc{font-size:8.5px;color:rgba(255,255,255,.38);font-style:italic;margin-top:1px}
+.sol-box{background:rgba(2,195,154,.1);border:1px solid rgba(2,195,154,.25);border-radius:7px;padding:10px;margin-top:10px}
+.sol-t{font-size:11px;font-weight:700;color:var(--mint);margin-bottom:6px}
+.sol-i{font-size:9.5px;color:rgba(255,255,255,.8);line-height:1.7;padding-left:11px;position:relative}
+.sol-i::before{content:'→';position:absolute;left:0;color:var(--mint);font-weight:700}
+
+/* ── P4 ROADMAP ── */
+.p-road{background:var(--darker);color:#fff}
+.tl-item{display:flex;gap:10px;margin-bottom:12px;position:relative}
+.tl-dw{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.tl-dot{width:13px;height:13px;border-radius:50%;background:var(--mint);border:2px solid var(--darker);flex-shrink:0}
+.tl-dot.up{background:rgba(2,195,154,.3);border-color:var(--mint)}
+.tl-line{width:2px;flex:1;background:rgba(2,195,154,.2);margin:2px 0}
+.tl-c{flex:1;min-width:0}
+.tl-q{font-size:8.5px;font-weight:800;color:var(--mint);text-transform:uppercase;letter-spacing:.4px}
+.tl-n{font-size:11px;font-weight:700;color:#fff;margin:1px 0}
+.tl-d{font-size:9px;color:rgba(255,255,255,.5);line-height:1.4}
+
+/* ── P5 UNIQUE ── */
+.p-uniq{background:var(--lighter);border-left:1px solid var(--light);border-right:1px solid var(--light)}
+.ucard{display:flex;gap:8px;padding:8px;background:#fff;border-radius:8px;margin-bottom:6px;box-shadow:0 1px 4px rgba(2,128,144,.07);align-items:flex-start}
+.uicon{width:30px;height:30px;border-radius:7px;background:var(--light);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.utitle{font-size:10.5px;font-weight:700;color:var(--dark)}
+.udesc{font-size:9px;color:var(--gray);line-height:1.4;margin-top:1px}
+.sdiv{font-size:9.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 6px;display:flex;align-items:center;gap:5px}
+.sdiv::after{content:'';flex:1;height:1px;background:rgba(2,128,144,.18)}
+.ph-row{display:flex;gap:7px;align-items:flex-start;margin-bottom:7px}
+.ph-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+.ph-txt{font-size:9.5px;line-height:1.5;color:var(--dark)}
+.ph-q{font-size:8.5px;font-weight:700}
+.pt-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.pbadge{background:var(--light);color:var(--teal);font-size:8.5px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid rgba(2,128,144,.18)}
+
+/* ── P6 TEAM ── */
+.p-team{background:var(--dark);color:#fff}
+.mb-row{display:flex;gap:9px;align-items:center;margin-bottom:8px}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+.mb-name{font-size:10.5px;font-weight:700;color:#fff}
+.mb-role{font-size:8.5px;color:rgba(255,255,255,.48);margin-top:1px;line-height:1.3}
+.ct-box{background:rgba(2,195,154,.1);border:1px solid rgba(2,195,154,.22);border-radius:8px;padding:10px;margin-top:10px}
+.ct-line{display:flex;gap:7px;align-items:center;font-size:9.5px;color:rgba(255,255,255,.78);margin-bottom:5px;line-height:1.4}
+.ct-ico{font-size:13px;width:17px;flex-shrink:0}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .panel{padding:16px 13px}
+  .logo-name{font-size:20px}
+  .ptitle,.ptitle-l{font-size:13px}
+}
+@media(max-width:768px){
+  .side{flex-direction:column}
+  .panel{width:100%;min-height:auto}
+}
+@media print{
+  body{background:#fff;padding:0}
+  .lbl{display:none}
+  .side{box-shadow:none;border-radius:0;margin:0}
+  .side:first-of-type{page-break-after:always}
+  @page{size:A4 landscape;margin:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="lbl">★ ЛИЦЕВАЯ СТОРОНА ★</div>
+
+<!-- ══════════════════════════════════════════════════════
+     FRONT SIDE
+     ══════════════════════════════════════════════════════ -->
+<div class="side">
+
+  <!-- PANEL 1 — COVER -->
+  <div class="panel p-cover">
+    <div class="logo-row">
+      <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="24" fill="rgba(255,255,255,.14)"/>
+        <circle cx="24" cy="24" r="22" fill="rgba(255,255,255,.09)"/>
+        <rect x="20" y="11" width="8" height="26" rx="3" fill="white"/>
+        <rect x="11" y="20" width="26" height="8" rx="3" fill="white"/>
+        <circle cx="32" cy="32" r="2.5" fill="#02C39A"/>
+        <circle cx="38" cy="32" r="2.5" fill="#02C39A"/>
+        <circle cx="32" cy="38" r="2.5" fill="#02C39A"/>
+        <circle cx="38" cy="38" r="2.5" fill="#02C39A"/>
+      </svg>
+      <div>
+        <div class="logo-name">MedNOTE</div>
+        <div class="logo-sub">AI Medical Assistant</div>
+      </div>
+    </div>
+
+    <div class="tagline">
+      Превращаем бумажную выписку в умное расписание лечения за секунды
+    </div>
+
+    <!-- Pill graphic -->
+    <svg width="100%" height="64" viewBox="0 0 220 64" style="margin:-4px 0;position:relative;z-index:2">
+      <ellipse cx="55" cy="32" rx="44" ry="19" fill="rgba(2,195,154,.15)" stroke="rgba(2,195,154,.35)" stroke-width="1.2"/>
+      <rect x="53" y="24" width="3.5" height="16" rx="1.5" fill="rgba(255,255,255,.45)"/>
+      <ellipse cx="148" cy="28" rx="30" ry="13" fill="rgba(0,168,150,.12)" stroke="rgba(0,168,150,.3)" stroke-width="1.2" transform="rotate(-14 148 28)"/>
+      <circle cx="196" cy="40" r="15" fill="rgba(2,195,154,.1)" stroke="rgba(2,195,154,.28)" stroke-width="1.2"/>
+      <line x1="190" y1="40" x2="202" y2="40" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linecap="round"/>
+      <line x1="196" y1="34" x2="196" y2="46" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+
+    <div class="stats-col">
+      <div class="stat-box">
+        <div class="stat-n">~50%</div>
+        <div class="stat-l">пациентов не принимают лекарства согласно назначениям</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-n">$946B</div>
+        <div class="stat-l">объём мирового рынка Digital Health к 2030 году</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-n">22%</div>
+        <div class="stat-l">CAGR рынка цифрового здравоохранения 2025–2030</div>
+      </div>
+    </div>
+
+    <div class="cover-foot">
+      📧 akzhol.nasyr@mail.ru<br/>
+      📍 Астана, Казахстан &nbsp;·&nbsp; 2026
+    </div>
+  </div>
+
+  <!-- PANEL 2 — FEATURES -->
+  <div class="panel p-feat">
+    <div class="ptitle">✦ Ключевые возможности</div>
+
+    <div class="fcard">
+      <div class="ficon">🤖</div>
+      <div>
+        <div class="ftitle">AI-анализ выписок</div>
+        <div class="fdesc">Gemini AI извлекает назначения из фото или текста, включая рукописные документы.</div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="ficon">📅</div>
+      <div>
+        <div class="ftitle">Умный календарь</div>
+        <div class="fdesc">Месячный и недельный вид. Курсы автоматически разбиваются по дням.</div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="ficon">🔥</div>
+      <div>
+        <div class="ftitle">Система мотивации</div>
+        <div class="fdesc">Стрик-огонь: растёт при ежедневном выполнении, эволюционирует на 10, 50, 100 дней.</div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="ficon">🔔</div>
+      <div>
+        <div class="ftitle">Push-уведомления</div>
+        <div class="fdesc">Умные напоминания с персональными текстами. Тихие часы 22:00–08:00.</div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="ficon">📊</div>
+      <div>
+        <div class="ftitle">Отчёт для врача</div>
+        <div class="fdesc">PDF-отчёт об исполнении назначений в один клик. Интеграция с МИС (в разработке).</div>
+      </div>
+    </div>
+
+    <div class="clbl">Adherence rate пользователей MedNOTE</div>
+    <svg viewBox="0 0 180 108" width="100%" style="display:block">
+      <g transform="translate(62,52)">
+        <circle cx="0" cy="0" r="40" fill="none" stroke="#E0F4F4" stroke-width="14"/>
+        <circle cx="0" cy="0" r="40" fill="none" stroke="#02C39A" stroke-width="14"
+          stroke-dasharray="201 251" stroke-dashoffset="63" stroke-linecap="round"/>
+        <text x="0" y="5" text-anchor="middle" font-family="Playfair Display,serif"
+          font-size="18" font-weight="900" fill="#028090">80%</text>
+        <text x="0" y="17" text-anchor="middle" font-family="Nunito,sans-serif"
+          font-size="7.5" fill="#64748B">adherence</text>
+      </g>
+      <rect x="118" y="26" width="9" height="9" rx="2" fill="#02C39A"/>
+      <text x="131" y="35" font-family="Nunito" font-size="8.5" fill="#1A3340">Выполнено (80%)</text>
+      <rect x="118" y="42" width="9" height="9" rx="2" fill="#E0F4F4"/>
+      <text x="131" y="51" font-family="Nunito" font-size="8.5" fill="#64748B">Пропущено (20%)</text>
+      <text x="118" y="72" font-family="Nunito" font-size="7.5" fill="#64748B">vs ~50% без</text>
+      <text x="118" y="82" font-family="Nunito" font-size="7.5" fill="#64748B">приложения</text>
+    </svg>
+  </div>
+
+  <!-- PANEL 3 — PROBLEM & SOLUTION -->
+  <div class="panel p-prob">
+    <div class="ptitle-l">⚠ Проблема</div>
+
+    <div class="pitem">
+      <div class="pnum">1</div>
+      <div>
+        <div class="ptxt"><strong style="color:#02C39A">~50%</strong> пациентов в мире не принимают хронические препараты согласно назначениям</div>
+        <div class="psrc">WHO Adherence Report; a:care Congress 2024</div>
+      </div>
+    </div>
+    <div class="pitem">
+      <div class="pnum">2</div>
+      <div>
+        <div class="ptxt"><strong style="color:#02C39A">$500B+</strong> ежегодных предотвратимых расходов здравоохранения США из-за несоблюдения лечения</div>
+        <div class="psrc">AJMC, 2024; 125 000+ предотвратимых смертей в год</div>
+      </div>
+    </div>
+    <div class="pitem">
+      <div class="pnum">3</div>
+      <div>
+        <div class="ptxt"><strong style="color:#02C39A">До 25%</strong> госпитализаций в США связаны с несоблюдением назначений</div>
+        <div class="psrc">US Pharmacist, 2024; CDC данные</div>
+      </div>
+    </div>
+    <div class="pitem">
+      <div class="pnum">4</div>
+      <div>
+        <div class="ptxt"><strong style="color:#02C39A">Низкая цифровизация</strong> первичной медпомощи в РК: большинство выписок бумажные</div>
+        <div class="psrc">Минздрав РК, программа «Цифровой Казахстан»</div>
+      </div>
+    </div>
+
+    <!-- Bar chart — market growth (verified figures) -->
+    <div style="margin-top:10px">
+      <div style="font-size:9.5px;font-weight:700;color:#02C39A;margin-bottom:5px">Рост рынка Digital Health ($B) — Grand View Research</div>
+      <svg viewBox="0 0 200 84" width="100%" style="display:block">
+        <line x1="26" y1="4" x2="26" y2="68" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+        <line x1="26" y1="68" x2="196" y2="68" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+        <rect x="32"  y="46" width="22" height="22" rx="3" fill="rgba(2,195,154,.35)"/>
+        <rect x="66"  y="38" width="22" height="30" rx="3" fill="rgba(2,195,154,.5)"/>
+        <rect x="100" y="28" width="22" height="40" rx="3" fill="rgba(2,195,154,.65)"/>
+        <rect x="134" y="16" width="22" height="52" rx="3" fill="rgba(2,195,154,.82)"/>
+        <rect x="168" y="6"  width="22" height="62" rx="3" fill="#02C39A"/>
+        <text x="43"  y="79" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.45)">2022</text>
+        <text x="77"  y="79" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.45)">2023</text>
+        <text x="111" y="79" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.45)">2024</text>
+        <text x="145" y="79" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.45)">2027F</text>
+        <text x="179" y="79" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.6)">2030F</text>
+        <text x="43"  y="43" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$180B</text>
+        <text x="77"  y="35" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$240B</text>
+        <text x="111" y="25" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$289B</text>
+        <text x="145" y="13" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$574B</text>
+        <text x="179" y="3"  text-anchor="middle" font-family="Nunito" font-size="7" fill="#02C39A" font-weight="700">$946B</text>
+      </svg>
+    </div>
+
+    <div class="sol-box">
+      <div class="sol-t">✦ Решение — MedNOTE</div>
+      <div class="sol-i">Фото выписки → готовое расписание за секунды</div>
+      <div class="sol-i">Умные напоминания в нужное время суток</div>
+      <div class="sol-i">Стрик-мотивация для ежедневного приёма</div>
+      <div class="sol-i">Отчёт о соблюдении назначений для врача</div>
+    </div>
+  </div>
+
+</div><!-- /front -->
+
+
+<div class="lbl">★ ОБРАТНАЯ СТОРОНА ★</div>
+
+<!-- ══════════════════════════════════════════════════════
+     BACK SIDE
+     ══════════════════════════════════════════════════════ -->
+<div class="side">
+
+  <!-- PANEL 4 — ROADMAP -->
+  <div class="panel p-road">
+    <div class="ptitle-l">🗺 План развития</div>
+
+    <div class="tl-item">
+      <div class="tl-dw"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-c">
+        <div class="tl-q">Q1–Q2 2026 ✅ Реализовано</div>
+        <div class="tl-n">MVP Launch</div>
+        <div class="tl-d">AI-анализ выписок, календарь курсов, PWA, Firebase, Vercel, стрик-система</div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dw"><div class="tl-dot up"></div><div class="tl-line"></div></div>
+      <div class="tl-c">
+        <div class="tl-q">Q3–Q4 2026</div>
+        <div class="tl-n">Growth</div>
+        <div class="tl-d">500 MAU, пилоты с клиниками Астаны, push-уведомления, первые B2B-партнёры</div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dw"><div class="tl-dot up"></div><div class="tl-line"></div></div>
+      <div class="tl-c">
+        <div class="tl-q">Q1–Q2 2027</div>
+        <div class="tl-n">B2B Entry</div>
+        <div class="tl-d">Интеграция с МИС РК, 5 клинических партнёров, B2B SaaS, грант/инвестиции</div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dw"><div class="tl-dot up"></div><div class="tl-line"></div></div>
+      <div class="tl-c">
+        <div class="tl-q">Q3–Q4 2027</div>
+        <div class="tl-n">Scale</div>
+        <div class="tl-d">10K+ MAU, нативные iOS/Android, мониторинг в реальном времени для врачей</div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dw"><div class="tl-dot up"></div></div>
+      <div class="tl-c">
+        <div class="tl-q">2028</div>
+        <div class="tl-n">Series A</div>
+        <div class="tl-d">СНГ-экспансия, клинические исследования adherence, $1–3M инвестиции</div>
+      </div>
+    </div>
+
+    <!-- MRR forecast -->
+    <div style="margin-top:12px">
+      <div style="font-size:9.5px;font-weight:700;color:#02C39A;margin-bottom:5px">Прогноз MRR ($K)</div>
+      <svg viewBox="0 0 200 76" width="100%" style="display:block">
+        <line x1="26" y1="4" x2="26" y2="60" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+        <line x1="26" y1="60" x2="196" y2="60" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+        <rect x="32"  y="54" width="24" height="6"  rx="2" fill="rgba(2,195,154,.32)"/>
+        <rect x="64"  y="44" width="24" height="16" rx="2" fill="rgba(2,195,154,.48)"/>
+        <rect x="96"  y="32" width="24" height="28" rx="2" fill="rgba(2,195,154,.64)"/>
+        <rect x="128" y="18" width="24" height="42" rx="2" fill="rgba(2,195,154,.82)"/>
+        <rect x="160" y="7"  width="24" height="53" rx="2" fill="#02C39A"/>
+        <text x="44"  y="71" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.42)">Q1</text>
+        <text x="76"  y="71" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.42)">Q2</text>
+        <text x="108" y="71" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.42)">Q3</text>
+        <text x="140" y="71" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.42)">Q4</text>
+        <text x="172" y="71" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.55)">2027</text>
+        <text x="44"  y="51" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$1K</text>
+        <text x="76"  y="41" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$3K</text>
+        <text x="108" y="29" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$5K</text>
+        <text x="140" y="15" text-anchor="middle" font-family="Nunito" font-size="7" fill="white">$10K</text>
+        <text x="172" y="4"  text-anchor="middle" font-family="Nunito" font-size="7" fill="#02C39A" font-weight="700">$15K</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- PANEL 5 — UNIQUE + PARTNERS -->
+  <div class="panel p-uniq">
+    <div class="ptitle">🎯 Почему MedNOTE выиграет</div>
+
+    <div class="ucard">
+      <div class="uicon">🤖</div>
+      <div>
+        <div class="utitle">AI-First в Казахстане</div>
+        <div class="udesc">Единственное решение с Gemini Vision для анализа медицинских выписок на русском языке.</div>
+      </div>
+    </div>
+    <div class="ucard">
+      <div class="uicon">📍</div>
+      <div>
+        <div class="utitle">Local-First</div>
+        <div class="udesc">Полная локализация, соответствие законодательству РК о персональных данных.</div>
+      </div>
+    </div>
+    <div class="ucard">
+      <div class="uicon">🔥</div>
+      <div>
+        <div class="utitle">Engagement Engine</div>
+        <div class="udesc">Стрик + умные уведомления обеспечивают adherence 80%+ против ~50% без приложения.</div>
+      </div>
+    </div>
+    <div class="ucard">
+      <div class="uicon">🏥</div>
+      <div>
+        <div class="utitle">B2B-масштабируемость</div>
+        <div class="udesc">SaaS для клиник, страховых компаний — масштабируемая бизнес-модель.</div>
+      </div>
+    </div>
+
+    <div class="sdiv">Фазы развития</div>
+
+    <div class="ph-row">
+      <div class="ph-num" style="background:#028090">1</div>
+      <div class="ph-txt">
+        <div class="ph-q" style="color:#028090">Q1–Q2 2026 — Валидация</div>
+        MVP + первые пользователи + пилоты с клиниками Астаны
+      </div>
+    </div>
+    <div class="ph-row">
+      <div class="ph-num" style="background:#00A896">2</div>
+      <div class="ph-txt">
+        <div class="ph-q" style="color:#00A896">Q3 2026 – Q2 2027 — Монетизация</div>
+        B2B SaaS + интеграция МИС + инвестиции/грант
+      </div>
+    </div>
+    <div class="ph-row">
+      <div class="ph-num" style="background:#02C39A">3</div>
+      <div class="ph-txt">
+        <div class="ph-q" style="color:#02C39A">2027–2028 — Масштаб</div>
+        10K MAU + СНГ-экспансия + Series A $1–3M
+      </div>
+    </div>
+
+    <div class="sdiv">Партнёры</div>
+    <div class="pt-row">
+      <div class="pbadge">🦷 Стоматология «Рядом с Вами»</div>
+      <div class="pbadge">🏥 АЭРХ РК</div>
+      <div class="pbadge">🇰🇿 МЗ РК</div>
+      <div class="pbadge">🚀 Astana Hub</div>
+    </div>
+    <div style="font-size:8px;color:var(--gray);margin-top:6px;line-height:1.5">
+      АЭРХ РК — Ассоциация эстетических и реконструктивных хирургов Казахстана
+    </div>
+  </div>
+
+  <!-- PANEL 6 — TEAM + CONTACTS -->
+  <div class="panel p-team">
+    <div class="ptitle-l">👥 Команда</div>
+
+    <div class="mb-row">
+      <div class="avatar" style="background:linear-gradient(135deg,#028090,#02C39A)">АН</div>
+      <div>
+        <div class="mb-name">Ақжол Насыр</div>
+        <div class="mb-role">Founder · Куратор · Разработчик</div>
+      </div>
+    </div>
+    <div class="mb-row">
+      <div class="avatar" style="background:linear-gradient(135deg,#00A896,#02C39A)">АС</div>
+      <div>
+        <div class="mb-name">Айгерим Садыковна</div>
+        <div class="mb-role">Project Manager</div>
+      </div>
+    </div>
+    <div class="mb-row">
+      <div class="avatar" style="background:linear-gradient(135deg,#0D3B4A,#028090)">АБ</div>
+      <div>
+        <div class="mb-name">Айдос Болатов</div>
+        <div class="mb-role">Консультант-генетик</div>
+      </div>
+    </div>
+    <div class="mb-row">
+      <div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#028090)">ЖИ</div>
+      <div>
+        <div class="mb-name">Жаксылық Ибрагимович</div>
+        <div class="mb-role">Разработчик</div>
+      </div>
+    </div>
+
+    <!-- Radar chart -->
+    <div style="margin-top:8px">
+      <div style="font-size:9.5px;font-weight:700;color:#02C39A;margin-bottom:3px;text-align:center">Конкурентные преимущества</div>
+      <svg viewBox="0 0 200 140" width="100%" style="display:block">
+        <g transform="translate(100,72)">
+          <polygon points="0,-52 45,-26 45,26 0,52 -45,26 -45,-26"
+            fill="none" stroke="rgba(2,195,154,.12)" stroke-width="1"/>
+          <polygon points="0,-36 31,-18 31,18 0,36 -31,18 -31,-18"
+            fill="none" stroke="rgba(2,195,154,.12)" stroke-width="1"/>
+          <polygon points="0,-19 16,-9.5 16,9.5 0,19 -16,9.5 -16,-9.5"
+            fill="none" stroke="rgba(2,195,154,.12)" stroke-width="1"/>
+          <line x1="0" y1="-52" x2="0" y2="52" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+          <line x1="-45" y1="-26" x2="45" y2="26" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+          <line x1="-45" y1="26" x2="45" y2="-26" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+          <!-- MedNOTE data -->
+          <polygon points="0,-49 42,-24 38,23 0,48 -42,23 -38,-23"
+            fill="rgba(2,195,154,.18)" stroke="#02C39A" stroke-width="1.8" stroke-linejoin="round"/>
+          <circle cx="0"   cy="-49" r="2.5" fill="#02C39A"/>
+          <circle cx="42"  cy="-24" r="2.5" fill="#02C39A"/>
+          <circle cx="38"  cy="23"  r="2.5" fill="#02C39A"/>
+          <circle cx="0"   cy="48"  r="2.5" fill="#02C39A"/>
+          <circle cx="-42" cy="23"  r="2.5" fill="#02C39A"/>
+          <circle cx="-38" cy="-23" r="2.5" fill="#02C39A"/>
+          <!-- Labels -->
+          <text x="0"   y="-57" text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.62)">AI</text>
+          <text x="51"  y="-26" text-anchor="start"  font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.62)">Local</text>
+          <text x="44"  y="34"  text-anchor="start"  font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.62)">UX</text>
+          <text x="0"   y="63"  text-anchor="middle" font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.62)">B2B</text>
+          <text x="-54" y="34"  text-anchor="end"    font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.62)">Privacy</text>
+          <text x="-50" y="-22" text-anchor="end"    font-family="Nunito" font-size="7.5" fill="rgba(255,255,255,.62)">Cost</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="ct-box">
+      <div style="font-size:10.5px;font-weight:700;color:#02C39A;margin-bottom:8px">📬 Свяжитесь с нами</div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <!-- QR Code -->
+        <div style="flex-shrink:0;text-align:center">
+          <img src="data:image/png;base64,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"
+            style="width:70px;height:70px;border-radius:7px;border:2px solid rgba(2,195,154,.3);display:block"
+            alt="QR-код брошюры"/>
+          <div style="font-size:7px;color:rgba(255,255,255,.38);margin-top:3px;line-height:1.3">
+            Брошюра<br/>онлайн
+          </div>
+        </div>
+        <!-- Contacts -->
+        <div style="flex:1;min-width:0">
+          <div class="ct-line"><span class="ct-ico">📧</span> akzhol.nasyr@mail.ru</div>
+          <div class="ct-line"><span class="ct-ico">📍</span> Астана, Казахстан, 2026</div>
+          <div style="margin-top:7px;padding-top:7px;border-top:1px solid rgba(2,195,154,.18);
+            font-size:8px;color:rgba(255,255,255,.35);line-height:1.5">
+            Ищем партнёров<br/>инвесторов<br/>клинических союзников
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /back -->
+</div><!-- /wrap -->
+</body>
+</html>

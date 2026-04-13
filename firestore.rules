@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /profiles/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /schedule_items/{itemId} {
+      // Read: only own items
+      allow read: if request.auth != null && resource.data.user_id == request.auth.uid;
+      // Create: user_id must match
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      // Update: own items only
+      allow update: if request.auth != null && resource.data.user_id == request.auth.uid;
+      // Delete: own items only — explicit separate rule
+      allow delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+    }
+
+    match /notes/{noteId} {
+      allow read: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+    }
+  }
+}
