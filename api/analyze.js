@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not configured' })
 
-  // Оригинальный рабочий промт от 11 апреля — не менять
+  // Simple, direct prompt — less is more for Gemini
   const prompt = 'Ты врач. Из медицинского документа извлеки ТОЛЬКО домашние назначения пациента после выписки.\n'
     + 'ВКЛЮЧАЙ: лекарства, ЛФК, домашние процедуры, визиты к врачу, диету.\n'
     + 'НЕ ВКЛЮЧАЙ: стационарные процедуры, диагнозы, анамнез.\n\n'
@@ -22,109 +22,129 @@ export default async function handler(req, res) {
   }
   parts.push({ text: imageBase64 ? prompt : (prompt + '\n\nДокумент:\n' + text) })
 
-  // Модели — gemini-2.0-flash первая (без thinking = нет таймаута)
-  // gemini-2.5-flash работала 11 апреля но вызывает таймаут на Vercel free
-  const MODELS = [
-    'gemini-2.0-flash',
-    'gemini-3-flash-preview',
-    'gemini-2.0-flash-lite',
-  ]
+  try {
+    // Try models in order — fallback if 503 (overloaded) or 429 (quota)
+    const MODELS = [
+      'gemini-2.0-flash',        // fastest, no thinking — primary
+      'gemini-2.0-flash-lite',   // lighter version — first fallback
+      'gemini-1.5-flash-8b',     // smallest, always available — last resort
+    ]
 
-  const startTime = Date.now()
-
-  for (let i = 0; i < MODELS.length; i++) {
-    const model = MODELS[i]
-    const elapsed = Date.now() - startTime
-    const timeLeft = 9200 - elapsed
-    if (timeLeft < 2000) break
-
-    const controller = new AbortController()
-    const tmo = setTimeout(() => controller.abort(), Math.min(timeLeft - 300, 8500))
-
-    try {
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({
-            contents: [{ parts }],
-            generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
-          }),
+    let r = null
+    let lastErr = ''
+    for (const model of MODELS) {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 9000)
+      try {
+        r = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + apiKey,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              contents: [{ parts }],
+              generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
+            }),
+          }
+        )
+        clearTimeout(timeout)
+        // Retry next model on 503 (overloaded) or 429 (quota exceeded)
+        if (r.status === 503 || r.status === 429) {
+          const t = await r.text()
+          lastErr = 'Модель ' + model + ' недоступна (' + r.status + ')'
+          console.log(lastErr + ', пробуем следующую...')
+          r = null
+          continue
         }
-      )
-      clearTimeout(tmo)
-
-      if ([400, 404, 429, 503].includes(r.status)) {
-        const t = await r.text().catch(() => '')
-        console.log(`[${model}] ${r.status} → next. ${t.slice(0,60)}`)
-        continue
-      }
-
-      if (!r.ok) {
-        const t = await r.text().catch(() => '')
-        return res.status(500).json({ error: `Gemini ${r.status}: ${t.slice(0, 200)}` })
-      }
-
-      const data = await r.json()
-      if (data.error) return res.status(500).json({ error: data.error.message })
-
-      const candidate = data.candidates?.[0]
-      if (!candidate) return res.status(500).json({ error: 'Пустой ответ от Gemini.' })
-      if (candidate.finishReason === 'SAFETY') return res.status(400).json({ error: 'Документ заблокирован фильтром безопасности.' })
-
-      // Берём ПОСЛЕДНИЙ text-блок (thinking-модели возвращают несколько parts)
-      const allParts = candidate.content?.parts || []
-      let raw = ''
-      for (const p of allParts) {
-        if (p.text) raw = p.text
-      }
-
-      if (!raw.trim()) {
-        return res.status(500).json({ error: 'Gemini не вернул текст. finishReason: ' + candidate.finishReason })
-      }
-
-      raw = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
-      const m = raw.match(/\[[\s\S]*\]/)
-      if (m) raw = m[0]
-
-      let parsed = []
-      try { parsed = JSON.parse(raw) } catch { try { parsed = JSON.parse(tryFix(raw)) } catch { parsed = [] } }
-      if (!Array.isArray(parsed)) parsed = []
-
-      const result = parsed.map(item => {
-        const n = Math.max(1, Math.min(6, parseInt(item.times_per_day) || 1))
-        return {
-          type:          item.type          || 'routine',
-          title:         (item.title        || 'Назначение').trim(),
-          dose:          item.dose          || null,
-          duration_days: item.duration_days ? parseInt(item.duration_days) : null,
-          is_one_time:   !!item.is_one_time,
-          notes:         item.notes         || null,
-          confidence:    item.confidence    || 'medium',
-          times_per_day: n,
-          time_slots:    buildTimeSlots(item.first_time || null, n),
+        break  // success — exit loop
+      } catch (fetchErr) {
+        clearTimeout(timeout)
+        if (fetchErr.name === 'AbortError') {
+          lastErr = 'Модель ' + model + ' не ответила за 9 сек'
+          r = null
+          continue
         }
-      })
-
-      console.log(`[${model}] OK ${Date.now()-startTime}ms, items: ${result.length}`)
-      return res.status(200).json({ items: result })
-
-    } catch (e) {
-      clearTimeout(tmo)
-      if (e.name === 'AbortError') {
-        console.log(`[${model}] timeout ${Date.now()-startTime}ms`)
-        if (i < MODELS.length - 1 && 9200 - (Date.now() - startTime) > 2000) continue
-        return res.status(504).json({
-          error: 'AI не успел обработать фото. Попробуйте вставить текст выписки — это работает быстрее.'
-        })
+        throw fetchErr
       }
-      throw e
     }
-  }
 
-  return res.status(503).json({ error: 'Gemini временно недоступен. Попробуйте через минуту.' })
+    if (!r) {
+      return res.status(503).json({
+        error: 'Все модели Gemini сейчас перегружены. Подождите 1-2 минуты и попробуйте снова. ' + lastErr
+      })
+    }
+
+    if (!r.ok) {
+      const t = await r.text()
+      return res.status(500).json({ error: 'Gemini API ' + r.status + ': ' + t.slice(0, 200) })
+    }
+
+    const data = await r.json()
+    if (data.error) return res.status(500).json({ error: data.error.message || 'Gemini error' })
+
+    const candidate = data.candidates?.[0]
+    if (!candidate) return res.status(500).json({ error: 'Пустой ответ от Gemini.' })
+
+    // Log finishReason for debugging
+    const reason = candidate.finishReason
+    if (reason === 'SAFETY') return res.status(500).json({ error: 'Документ заблокирован фильтром безопасности.' })
+
+    // Extract text — works for both regular and thinking models
+    // Thinking models may return multiple parts; get the last text part
+    const allParts = candidate.content?.parts || []
+    let raw = ''
+    for (const p of allParts) {
+      if (p.text) raw = p.text  // keep overwriting — last text part is the answer
+    }
+
+    if (!raw) {
+      return res.status(500).json({
+        error: 'Gemini не вернул текст. finishReason: ' + reason + '. Попробуйте снова.'
+      })
+    }
+
+    // Clean markdown fences
+    raw = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
+
+    // Extract JSON array
+    const arrMatch = raw.match(/\[[\s\S]*\]/)
+    if (arrMatch) raw = arrMatch[0]
+
+    let parsed
+    try { parsed = JSON.parse(raw) }
+    catch {
+      // Try to fix truncated JSON
+      try { parsed = JSON.parse(tryFix(raw)) }
+      catch { parsed = [] }
+    }
+    if (!Array.isArray(parsed)) parsed = []
+
+    // Build time_slots for each item
+    const result = parsed.map(item => {
+      const n          = Math.max(1, Math.min(6, parseInt(item.times_per_day) || 1))
+      const time_slots = buildTimeSlots(item.first_time || null, n)
+      return {
+        type:          item.type         || 'routine',
+        title:         (item.title       || 'Назначение').trim(),
+        dose:          item.dose         || null,
+        duration_days: item.duration_days ? parseInt(item.duration_days) : null,
+        is_one_time:   !!item.is_one_time,
+        notes:         item.notes        || null,
+        confidence:    item.confidence   || 'medium',
+        times_per_day: n,
+        time_slots,
+      }
+    })
+
+    return res.status(200).json({ items: result })
+
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      return res.status(504).json({ error: 'Gemini AI не ответил за 9 секунд. Попробуйте снова или используйте текстовый режим вместо фото.' })
+    }
+    return res.status(500).json({ error: 'Ошибка сервера: ' + e.message })
+  }
 }
 
 function buildTimeSlots(firstTime, n) {
