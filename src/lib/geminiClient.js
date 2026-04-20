@@ -1,13 +1,10 @@
 /**
- * geminiClient.js — calls Gemini directly from browser
+ * geminiClient.js — direct browser → Gemini API
  * Bypasses Vercel 10s timeout completely.
- * Browser → Gemini API (no server involved)
- *
- * Setup: add VITE_GEMINI_API_KEY to Vercel env vars (same key as GEMINI_API_KEY)
+ * Requires: VITE_GEMINI_API_KEY in Vercel env vars
  */
 
-const CLIENT_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
-const API_BASE   = 'https://generativelanguage.googleapis.com/v1beta/models'
+const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 
 const MODELS = [
   'gemini-2.0-flash',
@@ -15,20 +12,30 @@ const MODELS = [
   'gemini-2.0-flash-lite',
 ]
 
-function buildPrompt(lang) {
-  const ru = lang !== 'kk'
+function getPrompt(lang) {
+  const langLine = lang === 'kk'
+    ? 'Write title, dose, notes in Kazakh language.'
+    : 'Write title, dose, notes in Russian language.'
+
   return (
-    'List ALL medical instructions from this document as JSON array.\n' +
-    'Include: medications, procedures, exercises, diet, restrictions, appointments - everything.\n' +
-    (ru
-      ? 'Write title, dose, notes IN RUSSIAN.\n'
-      : 'Write title, dose, notes IN KAZAKH.\n') +
-    'Format: [{"type":"medication|exercise|procedure|appointment|restriction|nutrition",' +
-    '"title":"name","dose":"dosage or null","times_per_day":1,"first_time":"HH:MM or null",' +
-    '"duration_days":null,"is_one_time":false,"notes":"note or null"}]\n' +
-    'If document is unreadable: [{"type":"medication","title":"Document unreadable","dose":null,"times_per_day":1,"first_time":"08:00","duration_days":null,"is_one_time":false,"notes":"Please enter manually"}]\n' +
-    'Reply with JSON array ONLY, no explanations.'
+    'You are a medical assistant. Extract ALL items from this medical document: ' +
+    'medications, procedures, exercises, diet, restrictions, appointments — everything.\n' +
+    'Do NOT filter anything. The patient will decide what to keep.\n' +
+    langLine + '\n' +
+    'Return ONLY a JSON array. Each element:\n' +
+    '{"type":"medication","title":"name","dose":"dosage or null","times_per_day":1,' +
+    '"first_time":"08:00","duration_days":14,"is_one_time":false,"notes":"note or null"}\n' +
+    'Allowed types: medication, exercise, procedure, appointment, restriction, nutrition.\n' +
+    'If document is unreadable return [].\n' +
+    'ONLY JSON array, no markdown, no explanations.'
   )
+}
+
+function parseJSON(raw) {
+  raw = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
+  const m = raw.match(/\[[\s\S]*\]/)
+  if (m) raw = m[0]
+  try { return JSON.parse(raw) } catch { return null }
 }
 
 function buildTimeSlots(firstTime, n) {
@@ -47,7 +54,7 @@ function normalizeItem(item) {
   const n = Math.max(1, Math.min(6, parseInt(item.times_per_day) || 1))
   return {
     type:          item.type          || 'routine',
-    title:         (item.title        || 'Назначение').trim().slice(0, 60),
+    title:         (item.title        || 'Назначение').trim().slice(0, 80),
     dose:          item.dose          || null,
     duration_days: item.duration_days ? parseInt(item.duration_days) : null,
     is_one_time:   !!item.is_one_time,
@@ -58,86 +65,78 @@ function normalizeItem(item) {
   }
 }
 
-function parseJSON(raw) {
-  raw = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
-  const m = raw.match(/\[[\s\S]*\]/)
-  if (m) raw = m[0]
-  try { return JSON.parse(raw) } catch { return [] }
-}
+export async function analyzeWithGemini({ imageBase64, mimeType, text, lang = 'ru' }) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+  if (!apiKey) throw new Error('NO_KEY')
 
-export async function analyzeWithGemini({ imageBase64, mimeType, text, lang = 'ru', onProgress }) {
-  if (!CLIENT_KEY) {
-    throw new Error('VITE_GEMINI_API_KEY не настроен. Добавьте в Vercel → Settings → Environment Variables.')
-  }
+  const prompt = getPrompt(lang)
 
-  const ru = lang !== 'kk'
-  const prompt = buildPrompt(lang)
-  const parts  = []
-  // Text prompt FIRST, then image — better results with Gemini vision
-  parts.push({ text: imageBase64 ? prompt : (prompt + '\n\nДокумент:\n' + (text || '').slice(0, 8000)) })
+  // Text prompt first, then image (recommended order for Gemini Vision)
+  const parts = []
+  parts.push({ text: imageBase64 ? prompt : prompt + '\n\nDocument:\n' + (text || '').slice(0, 8000) })
   if (imageBase64) {
     parts.push({ inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } })
   }
 
+  let lastError = ''
+
   for (let i = 0; i < MODELS.length; i++) {
     const model = MODELS[i]
-    if (onProgress) onProgress(`Анализирую... (${model})`)
 
     try {
-      const res = await fetch(`${API_BASE}/${model}:generateContent?key=${CLIENT_KEY}`, {
+      const res = await fetch(`${API_BASE}/${model}:generateContent?key=${apiKey}`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts }],
+          contents: [{ role: 'user', parts }],
           generationConfig: { temperature: 0.1, maxOutputTokens: 2048 },
         }),
       })
 
-      if (res.status === 503 || res.status === 429 || res.status === 404 || res.status === 400) {
-        console.warn(`[${model}] ${res.status} — пробуем следующую`)
-        if (i === MODELS.length - 1) throw new Error(`Gemini API временно недоступен (${res.status}). Попробуйте через минуту.`)
+      if ([400, 404, 429, 503].includes(res.status)) {
+        lastError = `${model} ${res.status}`
+        console.warn(`[geminiClient] ${lastError}, trying next...`)
+        await new Promise(r => setTimeout(r, 300))
         continue
       }
 
       if (!res.ok) {
-        const t = await res.text()
-        throw new Error(`Gemini API ${res.status}: ${t.slice(0, 150)}`)
+        const t = await res.text().catch(() => '')
+        throw new Error(`Gemini ${res.status}: ${t.slice(0, 100)}`)
       }
 
       const data = await res.json()
       if (data.error) throw new Error(data.error.message || 'Gemini error')
 
       const candidate = data.candidates?.[0]
-      if (!candidate) throw new Error('Gemini вернул пустой ответ')
-      if (candidate.finishReason === 'SAFETY') throw new Error('Документ заблокирован фильтром безопасности')
+      if (!candidate) throw new Error('Пустой ответ от Gemini')
+      if (candidate.finishReason === 'SAFETY') throw new Error('Документ заблокирован фильтром')
 
+      // Get text — last text part (thinking models return multiple parts)
       const allParts = candidate.content?.parts || []
       let raw = ''
       for (const p of allParts) { if (p.text) raw = p.text }
-      console.log(`[${model}] raw response (first 500 chars):`, raw?.slice(0, 500))
+
+      console.log(`[geminiClient] ${model} OK, raw[:300]:`, raw.slice(0, 300))
 
       const parsed = parseJSON(raw)
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        // Gemini returned empty — return a placeholder so user knows to edit
-        console.warn(`[${model}] returned empty array. raw:`, raw?.slice(0, 200))
-        return [{
-          type: 'medication',
-          title: ru ? 'Не удалось распознать' : 'Cannot recognize',
-          dose: null, times_per_day: 1, first_time: '08:00',
-          duration_days: null, is_one_time: false,
-          notes: ru ? 'Введите назначения вручную — нажмите редактировать' : 'Enter manually',
-          confidence: 'low', time_slots: ['08:00'],
-        }]
+      if (!parsed || !Array.isArray(parsed)) {
+        console.warn('[geminiClient] Could not parse JSON, raw:', raw.slice(0, 200))
+        return []
       }
+
       return parsed.map(normalizeItem)
 
     } catch (e) {
-      if (i === MODELS.length - 1) throw e
-      // network error — try next
-      if (e.message?.includes('fetch') || e.message?.includes('network')) continue
-      throw e
+      if (e.message === 'NO_KEY') throw e
+      lastError = e.message
+      if (i < MODELS.length - 1) {
+        console.warn(`[geminiClient] ${model} error: ${e.message}, trying next...`)
+        continue
+      }
+      throw new Error(lastError)
     }
   }
 
-  throw new Error('Не удалось выполнить анализ. Попробуйте снова.')
+  throw new Error('Все модели Gemini недоступны: ' + lastError)
 }

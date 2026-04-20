@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { analyzeWithGemini } from '../lib/geminiClient'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
 import {
   format, addDays, startOfMonth, endOfMonth,
@@ -274,18 +275,32 @@ export default function Upload({ onAddItems }) {
     setStep('analyzing'); setErr('')
     try {
       const lang = navigator.language?.startsWith('kk') ? 'kk' : 'ru'
-      const body = file?.isImage
-        ? {imageBase64:file.base64, mimeType:file.mimeType, lang}
-        : {text:text.trim(), lang}
-      const res = await fetch('/api/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
-      const ct = res.headers.get('content-type')||''
-      if (!ct.includes('json')) {
-        if (res.status===413) throw new Error('Файл слишком большой. Сделайте скриншот.')
-        throw new Error('Ошибка сервера '+res.status)
+      const hasClientKey = !!import.meta.env.VITE_GEMINI_API_KEY
+      let rawItems = []
+
+      if (hasClientKey) {
+        // ✅ Client-side: browser → Gemini directly, NO Vercel 10s timeout
+        rawItems = await analyzeWithGemini({
+          imageBase64: file?.isImage ? file.base64 : undefined,
+          mimeType:    file?.isImage ? file.mimeType : undefined,
+          text:        !file?.isImage ? text.trim() : undefined,
+          lang,
+        })
+      } else {
+        // Fallback: server-side (may timeout for photos)
+        const body = file?.isImage
+          ? {imageBase64:file.base64, mimeType:file.mimeType, lang}
+          : {text:text.trim(), lang}
+        const res = await fetch('/api/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+        const ct = res.headers.get('content-type')||''
+        if (!ct.includes('json')) {
+          if (res.status===413) throw new Error('Файл слишком большой. Сделайте скриншот.')
+          throw new Error('Ошибка сервера '+res.status)
+        }
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Ошибка анализа')
+        rawItems = data.items || []
       }
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ошибка анализа')
-      const rawItems = data.items || []
 
       // Convert raw items to preview format
       const items = (rawItems || []).map((x, i) => ({
