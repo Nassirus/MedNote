@@ -228,11 +228,9 @@ export default function Upload({ onAddItems }) {
           return cv.toDataURL('image/jpeg',q)
         }
         let result=''
-        // No Vercel timeout anymore (direct API call) — max quality for OCR
-        // Target 1.5MB: high quality medical text recognition
-        for(const[px,q] of [[1600,0.92],[1400,0.88],[1200,0.85],[1000,0.80]]){
+        for(const[px,q] of [[800,0.7],[640,0.6],[512,0.5],[400,0.4]]){
           result=toJpeg(img,px,q)
-          if((result.split(',')[1]?.length||0)<1500*1024) break
+          if((result.split(',')[1]?.length||0)<800*1024) break
         }
         resolve(result)
       }
@@ -273,30 +271,25 @@ export default function Upload({ onAddItems }) {
     if(!hasContent){setErr('Загрузите файл или введите текст');return}
     setStep('analyzing'); setErr('')
     try {
-      const body = file?.isImage
-        ? {imageBase64:file.base64, mimeType:file.mimeType}
-        : {text:text.trim()}
-      const res = await fetch('/api/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
-      const ct = res.headers.get('content-type')||''
-      if (!ct.includes('json')) {
-        if (res.status===413) throw new Error('Файл слишком большой. Сделайте скриншот.')
+      const body=file?.isImage?{imageBase64:file.base64,mimeType:file.mimeType}:{text:text.trim()}
+      const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      const ct=res.headers.get('content-type')||''
+      if(!ct.includes('json')){
+        if(res.status===413) throw new Error('Файл слишком большой. Сделайте скриншот.')
         throw new Error('Ошибка сервера '+res.status)
       }
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ошибка анализа')
-      const rawItems = data.items || []
-
-            // Convert raw items to preview format
-      const items = (rawItems || []).map((x, i) => ({
+      const data=await res.json()
+      if(data.error) throw new Error(data.error)
+      const items=(data.items||[]).map((x,i)=>({
         ...x,
-        id: Date.now() + i,
+        id: Date.now()+i,
         sel: true,
-        start_date: format(new Date(), 'yyyy-MM-dd'),
+        start_date: format(new Date(),'yyyy-MM-dd'), // default start = today
       }))
-      if (items.length === 0) throw new Error('Назначения не найдены. Попробуйте сфотографировать чётче или вставьте текст выписки.')
+      if(items.length===0) throw new Error('Домашние назначения не найдены.')
       setPreview(items)
       setStep('preview')
-    } catch(e) { setErr(e.message); setStep('idle') }
+    } catch(e){setErr(e.message);setStep('idle')}
   }
 
   function updateItem(updated) {
