@@ -1,67 +1,118 @@
 /**
- * geminiClient.js — прямой вызов из браузера, без Vercel timeout
- * Требует: VITE_GEMINI_API_KEY в Vercel env vars
- * Использует тот же оригинальный промт что работал 11 апреля
+ * geminiClient.js — direct browser → Gemini API (copied from MedIQ working implementation)
+ * No Vercel server, no timeout limits.
+ * Requires: VITE_GEMINI_API_KEY in Vercel env vars
  */
-
-const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 
 const MODELS = [
   'gemini-2.0-flash',
   'gemini-3-flash-preview',
-  'gemini-2.0-flash-lite',
+  'gemini-2.5-flash',
 ]
 
-// ОРИГИНАЛЬНЫЙ промт — точная копия того что работало 11 апреля
-const INSTRUCTION = `Ты медицинский ассистент. Извлеки ВСЕ назначения врача из документа.
-Верни ТОЛЬКО валидный JSON-массив без markdown, комментариев и пояснений.
-Начни ответ с символа [ и закончи символом ].
-Каждый объект строго:
-{"type":"medication|exercise|procedure|appointment|restriction|routine|nutrition|sleep","title":"название","time":"HH:MM","notes":"примечание","freq":"частота"}
+// Оригинальный промт от 11 апреля — тот самый рабочий
+const SYSTEM_PROMPT =
+  'Ты врач. Из медицинского документа извлеки ТОЛЬКО домашние назначения пациента после выписки.\n' +
+  'ВКЛЮЧАЙ: лекарства, ЛФК, домашние процедуры, визиты к врачу, диету.\n' +
+  'НЕ ВКЛЮЧАЙ: стационарные процедуры, диагнозы, анамнез.\n\n' +
+  'Верни JSON-массив. Каждый элемент:\n' +
+  '{"type":"medication|exercise|procedure|appointment|restriction|nutrition","title":"название","dose":"дозировка или null","times_per_day":1,"first_time":"08:00 или null","duration_days":null,"is_one_time":false,"notes":"заметка или null"}\n\n' +
+  'Если ничего нет — верни []\n' +
+  'ТОЛЬКО JSON, никакого текста вокруг.'
 
-Правила time: утро/натощак/до завтрака → "08:00", в обед/после обеда → "13:00", вечером/на ночь → "21:00", 2 раза в день → первый приём "08:00", 3 раза в день → первый приём "08:00", если явно указано — использовать точно.
-Правила freq: не указано → "Ежедневно", 2 раза в день → "2 раза в день", через день → "Раз в 2 дня".
-Если документ нечёткий или рукописный — постарайся максимально извлечь данные.`
+function buildTimeSlots(firstTime, n) {
+  if (n === 1) return [firstTime || '08:00']
+  const preset = {
+    2: ['08:00', '20:00'],
+    3: ['08:00', '14:00', '20:00'],
+    4: ['08:00', '12:00', '16:00', '20:00'],
+    5: ['08:00', '11:00', '14:00', '17:00', '20:00'],
+    6: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
+  }
+  return preset[n] || [firstTime || '08:00']
+}
+
+function extractJSON(raw) {
+  if (!raw || !raw.trim()) return null
+  // Strip markdown fences
+  let s = raw.replace(/^[\s\S]*?```json\s*/i, '').replace(/```[\s\S]*$/g, '').trim()
+  if (!s.startsWith('[') && !s.startsWith('{')) {
+    const idx = raw.search(/[\[{]/)
+    if (idx >= 0) s = raw.slice(idx)
+    else s = raw
+  }
+  try { return JSON.parse(s) } catch {}
+  // Find array boundaries
+  const start = s.indexOf('[')
+  const end = s.lastIndexOf(']')
+  if (start !== -1 && end > start) {
+    try { return JSON.parse(s.slice(start, end + 1)) } catch {}
+  }
+  return null
+}
 
 export async function analyzeWithGemini({ imageBase64, mimeType, text }) {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY
   if (!apiKey) throw new Error('NO_KEY')
 
-  // ОРИГИНАЛЬНЫЙ ПОРЯДОК: изображение ПЕРВЫМ
-  const parts = []
+  // Build parts — image or text
+  const userParts = []
   if (imageBase64) {
-    parts.push({ inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } })
+    userParts.push({ inlineData: { mimeType: mimeType || 'image/jpeg', data: imageBase64 } })
+    userParts.push({ text: 'Это медицинский документ. Извлеки все назначения.' })
+  } else {
+    userParts.push({ text: 'Документ:\n' + (text || '') })
   }
-  parts.push({ text: imageBase64 ? INSTRUCTION : `${INSTRUCTION}\n\nТекст:\n${(text || '').slice(0, 8000)}` })
 
-  let lastError = ''
+  let lastErr = ''
 
   for (let i = 0; i < MODELS.length; i++) {
     const model = MODELS[i]
+    const isGemini3 = model.startsWith('gemini-3')
+
+    // Build body — exactly like MedIQ does it
+    const body = {
+      contents: [{ role: 'user', parts: userParts }],
+      // systemInstruction as SEPARATE field — key difference from before
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      generationConfig: {
+        maxOutputTokens: 4096,
+        temperature: 0.1,
+        // thinkingConfig only for Gemini 3 — other models don't support it
+        ...(isGemini3 ? { thinkingConfig: { thinkingLevel: 'MINIMAL' } } : {}),
+      },
+    }
 
     try {
-      const res = await fetch(`${API_BASE}/${model}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 4096,
-            responseMimeType: 'application/json'  // ОРИГИНАЛ
-          }
-        })
-      })
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(90000), // 90s — no server limit in browser
+        }
+      )
 
-      if ([400, 404, 429, 503].includes(res.status)) {
-        lastError = `${model} ${res.status}`
-        console.warn(`[geminiClient] ${lastError}, trying next...`)
-        await new Promise(r => setTimeout(r, 300))
+      if (res.status === 429 || res.status === 503) {
+        lastErr = `${model}: ${res.status}`
+        console.warn('[gemini]', lastErr, '— trying next model')
+        if (i < MODELS.length - 1) await new Promise(r => setTimeout(r, 500))
         continue
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('Неверный API ключ Gemini. Проверьте VITE_GEMINI_API_KEY в настройках Vercel.')
       }
 
       if (!res.ok) {
         const t = await res.text().catch(() => '')
+        // 400 Bad Request — thinkingConfig not supported by this model, try next
+        if (res.status === 400 && i < MODELS.length - 1) {
+          lastErr = `${model}: 400`
+          console.warn('[gemini] 400 on', model, '— trying next')
+          continue
+        }
         throw new Error(`Gemini ${res.status}: ${t.slice(0, 100)}`)
       }
 
@@ -70,46 +121,51 @@ export async function analyzeWithGemini({ imageBase64, mimeType, text }) {
 
       const candidate = data.candidates?.[0]
       if (!candidate) throw new Error('Пустой ответ от Gemini')
-      if (candidate.finishReason === 'SAFETY') throw new Error('Документ заблокирован фильтром')
+      if (candidate.finishReason === 'SAFETY') throw new Error('Документ заблокирован фильтром безопасности')
 
+      // Get text — collect ALL parts, take last text (thinking models return thought + answer)
       const allParts = candidate.content?.parts || []
       let raw = ''
-      for (const p of allParts) { if (p.text) raw = p.text }
-
-      console.log(`[geminiClient] ${model} OK, raw[:200]:`, raw.slice(0, 200))
-
-      // Парсим JSON
-      let clean = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
-      const m = clean.match(/\[[\s\S]*\]/)
-      if (m) clean = m[0]
-
-      let parsed = []
-      try { parsed = JSON.parse(clean) }
-      catch { parsed = [] }
-      if (!Array.isArray(parsed)) parsed = []
-
-      // Разбиваем 2x/3x дозировки
-      const result = []
-      for (const item of parsed) {
-        result.push(item)
-        if (item.freq === '2 раза в день' && item.time === '08:00') {
-          result.push({ ...item, time: '20:00', notes: (item.notes || '') + ' (вечер)' })
-        }
-        if (item.freq === '3 раза в день' && item.time === '08:00') {
-          result.push({ ...item, time: '13:00', notes: (item.notes || '') + ' (обед)' })
-          result.push({ ...item, time: '20:00', notes: (item.notes || '') + ' (вечер)' })
-        }
+      for (const p of allParts) {
+        if (typeof p.text === 'string') raw = p.text
       }
 
-      return result
+      console.log(`[gemini] ${model} OK, raw[:300]:`, raw.slice(0, 300))
+
+      const parsed = extractJSON(raw)
+      if (!parsed || !Array.isArray(parsed)) {
+        console.warn('[gemini] could not parse JSON:', raw.slice(0, 200))
+        return []
+      }
+
+      return parsed.map(item => {
+        const n = Math.max(1, Math.min(6, parseInt(item.times_per_day) || 1))
+        return {
+          type:          item.type          || 'routine',
+          title:         (item.title        || 'Назначение').trim(),
+          dose:          item.dose          || null,
+          duration_days: item.duration_days ? parseInt(item.duration_days) : null,
+          is_one_time:   !!item.is_one_time,
+          notes:         item.notes         || null,
+          confidence:    item.confidence    || 'medium',
+          times_per_day: n,
+          time_slots:    buildTimeSlots(item.first_time || null, n),
+        }
+      })
 
     } catch (e) {
       if (e.message === 'NO_KEY') throw e
-      lastError = e.message
-      if (i < MODELS.length - 1) continue
-      throw new Error(lastError)
+      if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+        throw new Error('Gemini не ответил вовремя (90 сек). Попробуйте ещё раз.')
+      }
+      lastErr = e.message
+      if (i < MODELS.length - 1) {
+        console.warn('[gemini] error on', model, ':', e.message, '— trying next')
+        continue
+      }
+      throw new Error(lastErr)
     }
   }
 
-  throw new Error('Все модели Gemini недоступны: ' + lastError)
+  throw new Error('Все модели Gemini недоступны: ' + lastErr)
 }
