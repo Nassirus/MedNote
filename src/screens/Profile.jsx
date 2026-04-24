@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { getPatientQRUrl } from '../lib/qrUtils'
+import DoctorPortal from './DoctorPortal'
 import { useAuth } from '../context/AuthContext'
 // googleCalendar loaded lazily in handlers below
 import {
@@ -166,6 +168,8 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
     err:  { bg: 'var(--danger-light)',  color: 'var(--danger)',  border: '#FECACA' },
   }[gcalMsgType]
 
+  if (doctorMode) return <DoctorPortal onBack={() => setDoctorMode(false)} />
+
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
 
@@ -206,6 +210,55 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
             ))}
           </div>
         </div>
+
+        {/* ── My QR code for doctor ── */}
+        <div className="card" style={{ padding:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom: showQR ? 14 : 0 }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:700, fontSize:14, color:'var(--text)' }}>📱 Мой QR-код</div>
+              <div style={{ fontSize:11, color:'var(--text3)', marginTop:2 }}>
+                Покажите врачу чтобы он добавил вас в свой список пациентов
+              </div>
+            </div>
+            <button onClick={() => setShowQR(p => !p)} style={{
+              padding:'7px 14px', borderRadius:10, border:'1.5px solid var(--primary)',
+              background: showQR ? 'var(--primary)' : 'white',
+              color: showQR ? 'white' : 'var(--primary)',
+              fontWeight:700, fontSize:12, cursor:'pointer', flexShrink:0
+            }}>
+              {showQR ? 'Скрыть' : 'Показать QR'}
+            </button>
+          </div>
+          {showQR && user && (
+            <div style={{ textAlign:'center' }}>
+              <img
+                src={getPatientQRUrl(user.uid)}
+                alt="QR-код пациента"
+                style={{ width:200, height:200, borderRadius:12, border:'2px solid var(--border)' }}
+              />
+              <div style={{ fontSize:11, color:'var(--text3)', marginTop:8, lineHeight:1.6 }}>
+                Врач сканирует этот QR-код и получает доступ<br/>к вашему расписанию назначений
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Doctor portal shortcut ── */}
+        <button onClick={() => setDoctorMode(true)} style={{
+          display:'flex', alignItems:'center', gap:12, padding:'14px 16px',
+          background:'#EFF6FF', border:'1.5px solid #BFDBFE',
+          borderLeft:'4px solid #2563EB', borderRadius:12,
+          cursor:'pointer', textAlign:'left', width:'100%',
+        }}>
+          <span style={{ fontSize:22 }}>👨‍⚕️</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontWeight:700, fontSize:14, color:'#1D4ED8' }}>Портал врача</div>
+            <div style={{ fontSize:11, color:'#3B82F6', marginTop:2 }}>
+              Управление назначениями пациентов и мониторинг
+            </div>
+          </div>
+          <span style={{ color:'#93C5FD', fontSize:18 }}>›</span>
+        </button>
 
         {/* ── Events manager shortcut ── */}
         {onOpenEvents && (

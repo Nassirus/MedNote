@@ -1,4 +1,4 @@
- # 💊 MedSchedule v2.0
+# 💊 MedSchedule v2.0
 
 AI-помощник по назначениям врача. Gemini AI анализирует выписки, Supabase хранит данные, Vercel деплоит.
 

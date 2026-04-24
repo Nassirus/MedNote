@@ -9,6 +9,7 @@ import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
+import { isAdmin, findClinic } from '../lib/roles'
 
 const Ctx = createContext(null)
 
@@ -21,7 +22,7 @@ export function AuthProvider({ children }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u)
       if (u) {
-        await fetchProfile(u.uid)
+        await fetchProfile(u.uid, u.email)
       } else {
         setProfile(null)
         setLoading(false)
@@ -30,22 +31,56 @@ export function AuthProvider({ children }) {
     return unsub
   }, [])
 
-  async function fetchProfile(uid) {
+  async function fetchProfile(uid, email) {
     const snap = await getDoc(doc(db, 'profiles', uid))
-    setProfile(snap.exists() ? { id: uid, ...snap.data() } : null)
+    let data = snap.exists() ? { id: uid, ...snap.data() } : null
+
+    // Auto-assign admin role
+    if (data && isAdmin(email) && data.role !== 'admin') {
+      await updateDoc(doc(db, 'profiles', uid), { role: 'admin' })
+      data = { ...data, role: 'admin' }
+    }
+
+    setProfile(data)
     setLoading(false)
   }
 
+  // Register patient (default role)
   async function register(email, password, name) {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
+    const role = isAdmin(email) ? 'admin' : 'patient'
     const profileData = {
       name,
-      email,
+      email: email.toLowerCase(),
+      role,
       notify_delay: 30,
       quiet_start: '22:00',
       quiet_end: '08:00',
       notifications: true,
       mediq_sync: false,
+      created_at: serverTimestamp(),
+    }
+    await setDoc(doc(db, 'profiles', cred.user.uid), profileData)
+    setProfile({ id: cred.user.uid, ...profileData })
+  }
+
+  // Register doctor (with clinic partner ID)
+  async function registerDoctor(email, password, name, partnerId, speciality) {
+    const clinic = findClinic(partnerId)
+    if (!clinic) throw new Error('Неверный ID клиники. Обратитесь к администратору.')
+
+    const cred = await createUserWithEmailAndPassword(auth, email, password)
+    const profileData = {
+      name,
+      email: email.toLowerCase(),
+      role: 'doctor',
+      clinic_id:   clinic.id,
+      clinic_name: clinic.name,
+      speciality:  speciality || '',
+      notify_delay: 30,
+      quiet_start: '22:00',
+      quiet_end: '08:00',
+      notifications: true,
       created_at: serverTimestamp(),
     }
     await setDoc(doc(db, 'profiles', cred.user.uid), profileData)
@@ -66,8 +101,15 @@ export function AuthProvider({ children }) {
     setProfile(p => ({ ...p, ...updates }))
   }
 
+  const role = profile?.role || 'patient'
+  const isDoctor = role === 'doctor' || role === 'admin'
+  const isAdminUser = role === 'admin'
+
   return (
-    <Ctx.Provider value={{ user, profile, loading, register, login, logout, updateProfile }}>
+    <Ctx.Provider value={{
+      user, profile, loading, role, isDoctor, isAdminUser,
+      register, registerDoctor, login, logout, updateProfile
+    }}>
       {children}
     </Ctx.Provider>
   )

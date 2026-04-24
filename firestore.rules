@@ -2,26 +2,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    match /profiles/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
+    // Schedule items — patient reads/writes own, doctor writes to patient's
     match /schedule_items/{itemId} {
-      // Read: only own items
-      allow read: if request.auth != null && resource.data.user_id == request.auth.uid;
-      // Create: user_id must match
-      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
-      // Update: own items only
-      allow update: if request.auth != null && resource.data.user_id == request.auth.uid;
-      // Delete: own items only — explicit separate rule
-      allow delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow read, create, update, delete: if request.auth != null &&
+        (resource == null || resource.data.user_id == request.auth.uid ||
+         request.resource.data.user_id == request.auth.uid ||
+         exists(/databases/$(database)/documents/doctor_patients/$(request.auth.uid + '_' + resource.data.user_id)));
     }
 
-    match /notes/{noteId} {
-      allow read: if request.auth != null && resource.data.user_id == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+    // Profiles — own profile only
+    match /profiles/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Doctor-patient links
+    match /doctor_patients/{docId} {
+      allow read, create, delete: if request.auth != null &&
+        (resource == null || resource.data.doctor_uid == request.auth.uid);
     }
   }
 }
- 
