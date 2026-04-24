@@ -52,6 +52,8 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
   const [qe, setQe]       = useState(profile?.quiet_end    || '08:00')
   const [notif, setNotif] = useState(profile?.notifications !== false)
   const [saved, setSaved] = useState(false)
+  const [doctorMode, setDoctorMode] = useState(false)
+  const [showQR, setShowQR] = useState(false)
 
   // ── MedIQ ────────────────────────────────────────────────────────
   const [mediq, setMediq]       = useState(profile?.mediq_sync || false)
