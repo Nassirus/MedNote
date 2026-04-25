@@ -126,6 +126,26 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
       </div>
 
       <div className="page-content">
+        <div className="desktop-dashboard-layout">
+        <div className="desktop-main-col">
+        {/* Desktop stats row */}
+        <style>{`@media(min-width:1100px){.dash-stats{display:grid!important}}`}</style>
+        <div className="dash-stats" style={{ display:'none', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:8 }}>
+          {[
+            ['📋', done+'/'+total, 'Выполнено сегодня', done===total&&total>0?'var(--success)':'var(--primary)'],
+            ['🔥', streak || 0, 'Дней подряд', 'var(--warning)'],
+            ['📅', items.length, 'Всего назначений', 'var(--purple)'],
+          ].map(([icon, value, label, color]) => (
+            <div key={label} className="card" style={{ display:'flex', alignItems:'center', gap:14, padding:'18px' }}>
+              <div style={{ fontSize:30 }}>{icon}</div>
+              <div>
+                <div style={{ fontSize:26, fontWeight:900, color, lineHeight:1 }}>{value}</div>
+                <div style={{ fontSize:12, color:'var(--text3)', marginTop:3 }}>{label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {items.length === 0 && !loading && (
           <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', color:'#0369A1',
             padding:'10px 14px', borderRadius:9, fontSize:12, marginBottom:8, lineHeight:1.8 }}>
@@ -327,6 +347,26 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
 
       {showAdd && <AddItemModal onAdd={add} onClose={() => setShowAdd(false)} existingItems={items} />}
       {selected && <ItemModal item={selected} onClose={() => setSelected(null)} onDelete={remove} onDeleteGroup={() => {}} onDeleteDates={() => {}} onToggle={toggle} onUpdate={update} allItems={items} />}
+        </div>
+        {/* ── Desktop sidebar panel ── */}
+        <div className="desktop-side-col" style={{display:'flex',flexDirection:'column',gap:16}}>
+          <div className="card" style={{padding:'20px'}}>
+            <div style={{fontWeight:700,fontSize:15,marginBottom:12}}>📊 Статистика</div>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}>
+                <span style={{color:'var(--text3)'}}>Сегодня</span>
+                <span style={{fontWeight:700,color:'var(--primary)'}}>{done}/{total}</span>
+              </div>
+              <div style={{height:6,background:'var(--surface2)',borderRadius:99}}>
+                <div style={{height:'100%',borderRadius:99,background:'var(--primary)',width:total>0?(done/total*100)+'%':'0%',transition:'width .4s'}}></div>
+              </div>
+              <div style={{fontSize:12,color:'var(--text3)',textAlign:'right'}}>
+                {total>0?Math.round(done/total*100):0}% выполнено
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
     </div>
   )
 }

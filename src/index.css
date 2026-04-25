@@ -136,21 +136,174 @@ input, textarea, select { font-size: 16px !important; }
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ══════════════════════════════════════════
-   BREAKPOINTS
-   ══════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════
+   DESKTOP ENHANCEMENTS — полноценный ПК-интерфейс
+   ════════════════════════════════════════════════════════ */
+
 @media (min-width: 768px) {
-  .sidebar { display: flex !important; }
+
+  /* ── Root: full height, no mobile constraints ── */
+  #root {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  body { background: #E8EDF5; }
+
+  /* ── Shell: centered card with shadow ── */
+  .app-shell {
+    max-width: 1360px;
+    margin: 0 auto;
+    width: 100%;
+    height: 100dvh;
+    box-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,.08);
+    background: var(--bg);
+    border-radius: 0;
+  }
+
+  /* ── Sidebar: polished left panel ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: white;
+    border-right: 1px solid var(--border);
+    display: flex !important;
+    flex-direction: column;
+    box-shadow: 1px 0 8px rgba(0,0,0,.04);
+  }
+
+  /* ── Main area background ── */
+  .main-area { background: var(--bg); }
+
+  /* ── Page header: bigger, more breathing room ── */
+  .page-header {
+    padding: 0 36px;
+    min-height: 72px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .page-header h1 { font-size: 22px; letter-spacing: -0.3px; }
+
+  /* ── Page content: comfortable reading width ── */
+  .page-content {
+    padding: 32px 36px;
+    max-width: 100%;
+  }
+
+  /* ── Cards: bigger padding ── */
+  .card {
+    padding: 24px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+  }
+
+  /* ── Inputs: desktop-sized ── */
+  .input {
+    padding: 11px 14px;
+    font-size: 14px !important;
+    border-radius: 10px;
+  }
+  .btn { padding: 11px 22px; font-size: 14px; border-radius: 10px; }
+  .label { font-size: 12px; }
+
+  /* ── Schedule items: roomier ── */
+  .schedule-item { padding: 14px 20px; font-size: 14px; border-radius: 14px; }
+
+  /* ── Two-column content grid ── */
+  .desktop-grid-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ── Three-column stats ── */
+  .desktop-grid-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  /* ── Auth: centered dialog ── */
+  .auth-card {
+    max-width: 480px;
+    padding: 48px 44px;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  }
+
+  /* ── Modals: centered, not bottom sheet ── */
+  .modal-overlay { align-items: center; padding: 24px; }
+  .modal-sheet {
+    border-radius: 20px;
+    max-width: 560px;
+    max-height: 88dvh;
+    padding: 28px;
+  }
+
+  /* ── Calendar: bigger cells ── */
+  .cal-day { font-size: 14px; min-height: 46px; border-radius: 10px; }
+
+  /* ── Hero banner ── */
+  .hero-banner { padding: 24px 28px; border-radius: 18px; }
+
+  /* ── Bottom nav: always hidden ── */
   .bottom-nav { display: none !important; }
-  .page-content { padding: 20px 28px; }
-  .page-header { padding: 0 24px; min-height: 60px; }
-  .page-header h1 { font-size: 18px; }
+
+  /* ── Hover effects ── */
+  .schedule-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); transition: all .15s; }
+  button:not(.check-btn):hover { filter: brightness(0.95); }
 }
 
+/* ═══════════════════════════════════════════
+   LARGE DESKTOP (≥1200px) — wider sidebar, 2-col dashboard
+   ═══════════════════════════════════════════ */
+@media (min-width: 1200px) {
+  :root { --sidebar-w: 280px; }
+
+  .page-content {
+    padding: 36px 44px;
+  }
+
+  /* Dashboard: today + stats side by side */
+  .desktop-dashboard-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .modal-sheet { max-width: 600px; }
+}
+
+/* ═══════════════════════════════════════════
+   EXTRA LARGE (≥1440px) — full spacing
+   ═══════════════════════════════════════════ */
+@media (min-width: 1440px) {
+  :root { --sidebar-w: 300px; }
+  .page-content { padding: 40px 52px; }
+}
+
+/* ── Desktop side/main columns ── */
+.desktop-side-col { display: none; } /* hidden on mobile */
+@media (min-width: 1200px) {
+  .desktop-side-col { display: flex !important; flex-direction: column; gap: 16px; }
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE (<768px)
+   ═══════════════════════════════════════════ */
 @media (max-width: 767px) {
-  .sidebar { display: none !important; }
+  .sidebar    { display: none !important; }
   .bottom-nav { display: flex !important; }
   .page-header h1 { font-size: 16px; }
+  .page-content { padding: 12px 14px; }
+  .desktop-grid-2, .desktop-grid-3, .desktop-dashboard-layout { display: flex !important; flex-direction: column; }
+  .desktop-side-col { display: none !important; }
+  .app-shell { max-width: 100%; }
+  .card { padding: 14px 16px !important; border-radius: 12px !important; }
 }
 
 /* ── Modal ── */
