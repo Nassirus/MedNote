@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { getPatientQRUrl } from '../lib/qrUtils'
-import DoctorPortal from './DoctorPortal'
+import { generateQRSVG, getPatientQRData } from '../lib/qrUtils'
 import { useAuth } from '../context/AuthContext'
 // googleCalendar loaded lazily in handlers below
 import {
@@ -52,7 +51,6 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
   const [qe, setQe]       = useState(profile?.quiet_end    || '08:00')
   const [notif, setNotif] = useState(profile?.notifications !== false)
   const [saved, setSaved] = useState(false)
-  const [doctorMode, setDoctorMode] = useState(false)
   const [showQR, setShowQR] = useState(false)
 
   // ── MedIQ ────────────────────────────────────────────────────────
@@ -170,8 +168,6 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
     err:  { bg: 'var(--danger-light)',  color: 'var(--danger)',  border: '#FECACA' },
   }[gcalMsgType]
 
-  if (doctorMode) return <DoctorPortal onBack={() => setDoctorMode(false)} />
-
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
 
@@ -234,7 +230,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
           {showQR && user && (
             <div style={{ textAlign:'center' }}>
               <img
-                src={getPatientQRUrl(user.uid)}
+                src={generateQRSVG(getPatientQRData(user.uid), 200)}
                 alt="QR-код пациента"
                 style={{ width:200, height:200, borderRadius:12, border:'2px solid var(--border)' }}
               />
@@ -244,23 +240,6 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
             </div>
           )}
         </div>
-
-        {/* ── Doctor portal shortcut ── */}
-        <button onClick={() => setDoctorMode(true)} style={{
-          display:'flex', alignItems:'center', gap:12, padding:'14px 16px',
-          background:'#EFF6FF', border:'1.5px solid #BFDBFE',
-          borderLeft:'4px solid #2563EB', borderRadius:12,
-          cursor:'pointer', textAlign:'left', width:'100%',
-        }}>
-          <span style={{ fontSize:22 }}>👨‍⚕️</span>
-          <div style={{ flex:1 }}>
-            <div style={{ fontWeight:700, fontSize:14, color:'#1D4ED8' }}>Портал врача</div>
-            <div style={{ fontSize:11, color:'#3B82F6', marginTop:2 }}>
-              Управление назначениями пациентов и мониторинг
-            </div>
-          </div>
-          <span style={{ color:'#93C5FD', fontSize:18 }}>›</span>
-        </button>
 
         {/* ── Events manager shortcut ── */}
         {onOpenEvents && (
