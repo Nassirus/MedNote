@@ -14,6 +14,7 @@ import Notes from './screens/Notes'
 import Profile from './screens/Profile'
 import EventsManager from './screens/EventsManager'
 import ReportView from './screens/ReportView'
+import PrescriptionRequests from './screens/PrescriptionRequests'
 
 // Doctor screens
 import DoctorApp from './screens/DoctorApp'
@@ -67,6 +68,12 @@ function Inner() {
     </ErrorBoundary>
   )
 
+  if (overlay === 'requests') return (
+    <ErrorBoundary key="requests">
+      <PrescriptionRequests onBack={() => setOverlay(null)}/>
+    </ErrorBoundary>
+  )
+
   function addItems(arr) { arr.forEach(a => add(a)); setScreen('calendar') }
 
   function renderScreen() {
@@ -74,7 +81,8 @@ function Inner() {
       case 'dashboard':
         return <Dashboard items={items} toggle={toggle} add={add} remove={remove}
           update={update} dbError={dbError}
-          onOpenEvents={() => setOverlay('events')}/>
+          onOpenEvents={() => setOverlay('events')}
+          onOpenRequests={() => setOverlay('requests')}/>
       case 'calendar':
         return <CalendarView items={items} add={add} toggle={toggle} remove={remove}
           removeGroup={removeGroup} update={update} allItems={items}/>

@@ -5,6 +5,8 @@ import AddItemModal from '../components/AddItemModal'
 import ItemModal from '../components/ItemModal'
 import StreakBadge from '../components/StreakBadge'
 import { useAuth } from '../context/AuthContext'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { db } from '../lib/firebase'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import {
@@ -31,6 +33,19 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
   const [filter, setFilter]     = useState('all')
   const [notifStatus, setNotifStatus] = useState('unknown') // unknown|granted|denied|unsupported
   const intervalRef = useRef(null)
+  const [pendingRequests, setPendingRequests] = useState(0)
+
+  // Watch for pending prescription requests
+  useEffect(() => {
+    if (!user) return
+    const q = query(
+      collection(db, 'prescription_requests'),
+      where('patient_uid', '==', user.uid),
+      where('status', '==', 'pending')
+    )
+    const unsub = onSnapshot(q, snap => setPendingRequests(snap.size))
+    return unsub
+  }, [user])
 
   // ── Streak ──────────────────────────────────────────────────────────
   const { streak, visual: streakVisual, milestone: streakMilestone } = useStreak(user, items)
@@ -96,6 +111,21 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
           {/* Streak badge */}
           <StreakBadge streak={streak} visual={streakVisual} milestone={streakMilestone} />
 
+          {/* Prescription requests badge */}
+          {pendingRequests > 0 && (
+            <button onClick={() => typeof onOpenRequests === 'function' && onOpenRequests()}
+              style={{
+                position:'relative', background:'#FEF3C7', border:'1.5px solid #FDE68A',
+                borderRadius:10, padding:'6px 10px', cursor:'pointer',
+                display:'flex', alignItems:'center', gap:6, fontSize:12, fontWeight:700,
+                color:'#92400E',
+              }}>
+              📨 Запросы
+              <span style={{ background:'var(--danger)', color:'white', borderRadius:'50%',
+                width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:10, fontWeight:800 }}>{pendingRequests}</span>
+            </button>
+          )}
           {/* Notification bell */}
           {notifStatus !== 'unsupported' && notifStatus !== 'granted' && (
             <button onClick={enableNotifications} title="Включить уведомления"

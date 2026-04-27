@@ -59,6 +59,22 @@ service cloud.firestore {
         request.resource.data.user_id == request.auth.uid;
     }
 
+    // ── prescription_requests ────────────────────────────────────────
+    // Doctor creates request, patient reads/updates/deletes their own
+    match /prescription_requests/{docId} {
+      // Doctor can create
+      allow create: if request.auth != null;
+      // Patient reads their own pending requests
+      allow read: if request.auth != null && (
+        resource == null ||
+        resource.data.patient_uid == request.auth.uid ||
+        resource.data.doctor_uid == request.auth.uid
+      );
+      // Patient can accept (update) or reject (delete) their own requests
+      allow update, delete: if request.auth != null &&
+        resource.data.patient_uid == request.auth.uid;
+    }
+
     // ── streaks / profiles sub-collections ───────────────────────────
     match /streaks/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;

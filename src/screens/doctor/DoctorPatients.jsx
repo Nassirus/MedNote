@@ -289,24 +289,30 @@ function PrescriptionSheet({ patient, onClose, onSaved }) {
     if(!patient.patient_uid){setErr('Этот пациент без аккаунта MedNOTE — назначения можно только записать в приём');return}
     setLoading(true);setErr('')
     try{
-      const start=new Date()
       const SLOTS={1:['08:00'],2:['08:00','20:00'],3:['08:00','14:00','20:00']}
-      for(const item of valid){
-        const days=item.duration_days||1
-        const slots=SLOTS[Math.min(3,item.times_per_day||1)]||[item.first_time||'08:00']
-        for(let d=0;d<days;d++){
-          const dateStr=format(addDays(start,d),'yyyy-MM-dd')
-          for(const t of slots){
-            await addDoc(collection(db,'schedule_items'),{
-              user_id:patient.patient_uid,type:item.type,
-              title:item.title.trim(),time:t,endTime:null,
-              notes:[item.notes,item.dose].filter(Boolean).join(' · ')||'',
-              freq:'Разово',date:dateStr,color:null,done:false,
-              added_by:'doctor',created_at:serverTimestamp()
-            })
-          }
-        }
-      }
+      // Build items array for the request
+      const requestItems = valid.map(item=>({
+        type:item.type,
+        title:item.title.trim(),
+        dose:item.dose||null,
+        notes:item.notes||null,
+        time:item.first_time||'08:00',
+        time_slots:SLOTS[Math.min(3,item.times_per_day||1)]||[item.first_time||'08:00'],
+        times_per_day:item.times_per_day||1,
+        duration_days:item.duration_days||7,
+        is_one_time:false,
+      }))
+      // Send as a REQUEST — patient must accept
+      await addDoc(collection(db,'prescription_requests'),{
+        patient_uid:   patient.patient_uid,
+        patient_name:  patient.patient_name,
+        doctor_uid:    patient.doctor_uid||'',
+        doctor_name:   patient.doctor_name||'Врач',
+        clinic_name:   patient.clinic_name||'',
+        items:         requestItems,
+        status:        'pending',
+        created_at:    serverTimestamp(),
+      })
       onSaved(valid.length)
     }catch(e){setErr('Ошибка: '+e.message)}
     setLoading(false)
