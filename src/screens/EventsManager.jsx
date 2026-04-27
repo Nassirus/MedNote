@@ -77,8 +77,10 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
   }, [items, search, filterType])
 
   const totalItems  = items.length
-  const courseItems = items.filter(i => i.date).length
-  const recurItems  = items.filter(i => !i.date).length
+  // Courses = unique title+type groups (not individual events)
+  const groups      = groupItems(items)
+  const courseItems = groups.filter(g => g.items.some(i => i.date)).length
+  const recurItems  = groups.filter(g => g.items.every(i => !i.date)).length
 
   function saveEdit(id, form) {
     update(id, form)

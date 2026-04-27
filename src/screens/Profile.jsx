@@ -115,7 +115,6 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
   // ── Profile stats ────────────────────────────────────────────────
   const name      = profile?.name || 'Пользователь'
   const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()
-  const avg       = Math.round(WEEK.reduce((s,d) => s + d.pct, 0) / WEEK.length)
   const doneToday = items.filter(i => i.done).length
 
   function buildPayload() {

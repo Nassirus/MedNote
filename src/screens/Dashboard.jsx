@@ -164,7 +164,9 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
           {[
             ['📋', done+'/'+total, 'Выполнено сегодня', done===total&&total>0?'var(--success)':'var(--primary)'],
             ['🔥', streak || 0, 'Дней подряд', 'var(--warning)'],
-            ['📅', items.length, 'Всего назначений', 'var(--purple)'],
+            ['📅', (() => {
+              const m = {}; items.forEach(i => { m[i.type+'__'+i.title] = true }); return Object.keys(m).length
+            })(), 'Курсов активных', 'var(--purple)'],
           ].map(([icon, value, label, color]) => (
             <div key={label} className="card" style={{ display:'flex', alignItems:'center', gap:14, padding:'18px' }}>
               <div style={{ fontSize:30 }}>{icon}</div>

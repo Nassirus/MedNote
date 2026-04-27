@@ -442,7 +442,8 @@ export default function DoctorCalendar() {
               ))}
             </div>
             {/* Days */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+              gridAutoRows:'52px' }}>
               {days.map(day => {
                 const da    = apptsForDay(day)
                 const sel   = isSameDay(day, selected)
@@ -451,7 +452,7 @@ export default function DoctorCalendar() {
                 return (
                   <button key={day.toISOString()} onClick={() => setSelected(day)}
                     style={{
-                      aspectRatio:'1', display:'flex', flexDirection:'column',
+                      height:'52px', display:'flex', flexDirection:'column',
                       alignItems:'center', justifyContent:'flex-start',
                       padding:'6px 4px 4px',
                       border:`2px solid ${sel ? '#1D4ED8' : 'transparent'}`,
