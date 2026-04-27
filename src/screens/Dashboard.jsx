@@ -176,12 +176,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
           ))}
         </div>
 
-        {items.length === 0 && !loading && (
-          <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', color:'#0369A1',
-            padding:'10px 14px', borderRadius:9, fontSize:12, marginBottom:8, lineHeight:1.8 }}>
-            🔍 <strong>Диагностика:</strong> uid: {user?.uid?.slice(0,8)}... | dbError: {String(dbError)} | loading: {String(loading)}
-          </div>
-        )}
+
         {/* Notification permission prompt */}
         {notifStatus === 'default' && (
           <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10,
@@ -272,16 +267,29 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           {filtered.length === 0 && (
             <div className="empty-state">
-              <div style={{ fontSize:44, marginBottom:12 }}>
-                {total===0 ? '📋' : filter==='done'&&done===0 ? '⏳' : '🎉'}
+              <div style={{ fontSize:48, marginBottom:12 }}>
+                {total===0 ? '🗓️' : filter==='done'&&done===0 ? '⏳' : '🎉'}
               </div>
               <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', marginBottom:6 }}>
-                {total===0 ? 'Расписание пустое' : filter==='done'&&done===0 ? 'Ещё ничего не выполнено' : 'Всё выполнено!'}
+                {total===0
+                  ? 'На сегодня назначений нет'
+                  : filter==='done'&&done===0
+                  ? 'Ещё ничего не выполнено'
+                  : 'Всё выполнено на сегодня!'}
+              </div>
+              <div style={{ fontSize:13, color:'var(--text3)', lineHeight:1.7, marginBottom:14, textAlign:'center' }}>
+                {total===0
+                  ? 'Добавьте назначения вручную или загрузите фото выписки через ИИ-анализ'
+                  : filter==='done'&&done===0
+                  ? 'Отмечайте выполнение нажав на событие'
+                  : ''}
               </div>
               {total===0 && (
-                <button className="btn btn-primary" onClick={() => setShowAdd(true)} style={{ marginTop:10 }}>
-                  + Добавить первую задачу
-                </button>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button className="btn btn-primary" onClick={() => setShowAdd(true)}>
+                    + Добавить
+                  </button>
+                </div>
               )}
             </div>
           )}

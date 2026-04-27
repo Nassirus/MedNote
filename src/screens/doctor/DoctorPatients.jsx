@@ -190,7 +190,7 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
               <div style={{ background:'#EFF6FF', borderRadius:12, padding:'14px',
                 fontSize:13, color:'#1E40AF', lineHeight:1.6 }}>
                 📱 Попросите пациента открыть MedNOTE → Профиль → показать QR-код.
-                Затем нажмите кнопку ниже и наведите камеру.
+                Или введите UID пациента вручную.
               </div>
               <button onClick={()=>setShowScanner(true)} disabled={loading} style={{
                 width:'100%', padding:'14px', borderRadius:14, border:'none',
@@ -199,6 +199,34 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
               }}>
                 {loading ? '⏳ Загрузка...' : '📷 Сканировать QR'}
               </button>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ flex:1, height:1, background:'var(--border)' }}/>
+                <span style={{ fontSize:11, color:'var(--text3)', fontWeight:600 }}>или введите UID вручную</span>
+                <div style={{ flex:1, height:1, background:'var(--border)' }}/>
+              </div>
+              <div style={{ display:'flex', gap:8 }}>
+                <input className="input" placeholder="UID пациента (из его профиля MedNOTE)"
+                  style={{ flex:1, fontSize:12 }}
+                  onKeyDown={async e => {
+                    if (e.key === 'Enter' && e.target.value.trim().length >= 20) {
+                      await handleQR(e.target.value.trim())
+                    }
+                  }}
+                  onChange={e => {
+                    if (e.target.value.trim().length >= 20) {
+                      // auto-trigger on paste/complete UID
+                    }
+                  }}
+                  id="uid-input"
+                />
+                <button onClick={async () => {
+                  const v = document.getElementById('uid-input')?.value?.trim()
+                  if (v && v.length >= 20) await handleQR(v)
+                }} style={{
+                  padding:'0 14px', borderRadius:10, border:'none',
+                  background:'#1D4ED8', color:'white', fontWeight:700, cursor:'pointer', flexShrink:0
+                }}>Добавить</button>
+              </div>
             </div>
           )}
 

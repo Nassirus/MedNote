@@ -7,11 +7,6 @@ import {
   ResponsiveContainer, Cell, CartesianGrid
 } from 'recharts'
 
-const WEEK = [
-  { day:'Пн', pct:67 }, { day:'Вт', pct:100 }, { day:'Ср', pct:50 },
-  { day:'Чт', pct:83 }, { day:'Пт', pct:100 }, { day:'Сб', pct:33 }, { day:'Вс', pct:67 },
-]
-
 function Toggle({ on, onChange }) {
   return (
     <button
@@ -197,9 +192,9 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginTop:14 }}>
             {[
-              ['Сегодня', doneToday + '/' + items.length, 'var(--primary)'],
-              ['Ср. неделя', avg + '%', avg >= 80 ? 'var(--success)' : 'var(--warning)'],
-              ['Активных', String(items.length), 'var(--purple)'],
+              ['Сегодня', doneToday + '/' + items.filter(it => { const t=new Date(); const ds=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; return it.date===ds }).length, 'var(--primary)'],
+              ['Ср. неделя', weekAvg !== null ? weekAvg + '%' : '—', weekAvg === null ? 'var(--text3)' : weekAvg >= 80 ? 'var(--success)' : 'var(--warning)'],
+              ['Курсов', String(activeCourses), 'var(--purple)'],
             ].map(([l,v,c]) => (
               <div key={l} style={{ background:'var(--surface2)', borderRadius:9, padding:'10px 8px', textAlign:'center' }}>
                 <div style={{ fontWeight:800, fontSize:18, color:c }}>{v}</div>
@@ -228,14 +223,32 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
             </button>
           </div>
           {showQR && user && (
-            <div style={{ textAlign:'center' }}>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
               <img
-                src={generateQRSVG(getPatientQRData(user.uid), 200)}
+                src={generateQRSVG(getPatientQRData(user.uid), 220)}
                 alt="QR-код пациента"
-                style={{ width:200, height:200, borderRadius:12, border:'2px solid var(--border)' }}
+                style={{ width:220, height:220, borderRadius:14,
+                  border:'2px solid var(--primary-border)',
+                  boxShadow:'var(--shadow-md)' }}
               />
-              <div style={{ fontSize:11, color:'var(--text3)', marginTop:8, lineHeight:1.6 }}>
-                Врач сканирует этот QR-код и получает доступ<br/>к вашему расписанию назначений
+              {/* UID — permanent identifier */}
+              <div style={{ width:'100%', background:'var(--surface2)', borderRadius:10,
+                padding:'10px 14px', border:'1px solid var(--border)' }}>
+                <div style={{ fontSize:10, fontWeight:700, color:'var(--text3)',
+                  textTransform:'uppercase', letterSpacing:0.5, marginBottom:4 }}>
+                  Ваш уникальный ID пациента
+                </div>
+                <div style={{ fontSize:12, fontFamily:'monospace', color:'var(--text)',
+                  fontWeight:600, wordBreak:'break-all' }}>
+                  {user.uid}
+                </div>
+                <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, lineHeight:1.5 }}>
+                  🔒 Этот ID создаётся один раз при регистрации и никогда не меняется.
+                  Врач может добавить вас введя этот ID вручную.
+                </div>
+              </div>
+              <div style={{ fontSize:11, color:'var(--text3)', textAlign:'center', lineHeight:1.7 }}>
+                Покажите QR-код врачу — он сканирует его камерой<br/>и сразу добавит вас в свой список пациентов
               </div>
             </div>
           )}
@@ -405,7 +418,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
             📊 Соблюдение за неделю
           </div>
           <ResponsiveContainer width="100%" height={110}>
-            <BarChart data={WEEK} barSize={18}>
+            <BarChart data={weeklyData} barSize={18}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/>
               <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize:11, fill:'var(--text3)' }}/>
               <YAxis domain={[0,100]} axisLine={false} tickLine={false} tick={{ fontSize:10, fill:'var(--text3)' }}/>
@@ -413,8 +426,8 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
                 formatter={v => [v+'%', 'Выполнено']}
                 contentStyle={{ borderRadius:8, border:'none', boxShadow:'var(--shadow-md)', fontSize:12 }}/>
               <Bar dataKey="pct" radius={[5,5,0,0]}>
-                {WEEK.map((e,i) => (
-                  <Cell key={i} fill={e.pct === 100 ? '#059669' : e.pct >= 60 ? '#2563EB' : '#F59E0B'}/>
+                {weeklyData.map((e,i) => (
+                  <Cell key={i} fill={e.isFuture ? 'var(--border2)' : e.pct === 100 ? '#059669' : e.pct >= 60 ? '#2563EB' : '#F59E0B'}/>
                 ))}
               </Bar>
             </BarChart>

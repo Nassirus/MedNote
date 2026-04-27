@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import {
-  collection, query, where, getDocs, addDoc,
-  onSnapshot, serverTimestamp, deleteDoc, doc
+  collection, query, where, addDoc, doc,
+  onSnapshot, serverTimestamp, updateDoc, deleteDoc
 } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import {
-  format, addDays, startOfMonth, endOfMonth,
-  startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isSameMonth
+  format, addDays, addMonths, subMonths,
+  startOfMonth, endOfMonth,
+  startOfWeek, endOfWeek,
+  eachDayOfInterval, isSameDay, isSameMonth, isToday
 } from 'date-fns'
 import { ru } from 'date-fns/locale'
 
@@ -19,345 +21,541 @@ const TYPE_COLORS = {
   restriction: '#DC2626',
   other:       '#64748B',
 }
+const TYPE_LABELS = {
+  appointment:'📅 Приём',
+  procedure: '🩺 Процедура',
+  medication:'💊 Лекарство',
+  exercise:  '🏃 ЛФК',
+  other:     '📋 Другое',
+}
 
-function AppointmentModal({ date, doctorUid, patients, onClose, onSaved }) {
-  const [title, setTitle]     = useState('')
-  const [time, setTime]       = useState('09:00')
-  const [patient, setPatient] = useState('')
-  const [type, setType]       = useState('appointment')
-  const [notes, setNotes]     = useState('')
-  const [duration, setDuration] = useState(30)
-  const [loading, setLoading] = useState(false)
-  const [err, setErr]         = useState('')
-
-  const TYPES = [
-    {v:'appointment',l:'📅 Приём'},
-    {v:'procedure',l:'🩺 Процедура'},
-    {v:'medication',l:'💊 Лекарство'},
-    {v:'exercise',l:'🏃 ЛФК'},
-    {v:'other',l:'📋 Другое'},
-  ]
+// ── Appointment form (modal bottom sheet) ─────────────────
+function AppointmentForm({ date, appt, doctorUid, patients, onClose, onSaved }) {
+  const editing = !!appt
+  const [title,    setTitle]    = useState(appt?.title    || '')
+  const [time,     setTime]     = useState(appt?.time     || '09:00')
+  const [type,     setType]     = useState(appt?.type     || 'appointment')
+  const [patient,  setPatient]  = useState(appt?.patient_id || '')
+  const [notes,    setNotes]    = useState(appt?.notes    || '')
+  const [duration, setDuration] = useState(appt?.duration_min || 30)
+  const [loading,  setLoading]  = useState(false)
+  const [err,      setErr]      = useState('')
 
   async function save() {
     if (!title.trim()) { setErr('Введите название'); return }
     setLoading(true); setErr('')
     try {
-      const selPatient = patients.find(p=>p.id===patient)
-      await addDoc(collection(db,'doctor_appointments'), {
-        doctor_uid:    doctorUid,
-        patient_id:    patient || null,
-        patient_name:  selPatient?.patient_name || '',
-        patient_has_account: selPatient?.has_account || false,
-        patient_uid:   selPatient?.patient_uid || null,
-        title:         title.trim(),
+      const sel = patients.find(p => p.id === patient)
+      const data = {
+        doctor_uid:   doctorUid,
+        patient_id:   patient || null,
+        patient_name: sel?.patient_name || '',
+        patient_uid:  sel?.patient_uid  || null,
+        patient_has_account: sel?.has_account || false,
+        title:        title.trim(),
         type,
-        date:          format(date, 'yyyy-MM-dd'),
+        date:         format(date, 'yyyy-MM-dd'),
         time,
-        duration_min:  duration,
-        notes:         notes.trim(),
-        status:        'scheduled', // scheduled | done | cancelled
-        created_at:    serverTimestamp(),
-      })
-
-      // If patient has MedNOTE account — add to their schedule too
-      if (selPatient?.patient_uid) {
-        await addDoc(collection(db,'schedule_items'), {
-          user_id:    selPatient.patient_uid,
-          type:       'appointment',
-          title:      title.trim(),
-          time,
-          endTime:    null,
-          notes:      notes.trim(),
-          freq:       'Разово',
-          date:       format(date,'yyyy-MM-dd'),
-          color:      null, done:false,
-          added_by:   'doctor',
-          created_at: serverTimestamp(),
+        duration_min: duration,
+        notes:        notes.trim(),
+        status:       'scheduled',
+      }
+      if (editing) {
+        await updateDoc(doc(db, 'doctor_appointments', appt.id), data)
+      } else {
+        await addDoc(collection(db, 'doctor_appointments'), {
+          ...data, created_at: serverTimestamp()
         })
+        // Mirror to patient's MedNOTE if they have account
+        if (sel?.patient_uid) {
+          await addDoc(collection(db, 'schedule_items'), {
+            user_id:   sel.patient_uid,
+            type:      'appointment',
+            title:     title.trim(),
+            time,
+            endTime:   null,
+            notes:     notes.trim(),
+            freq:      'Разово',
+            date:      format(date, 'yyyy-MM-dd'),
+            color:     null, done: false,
+            added_by:  'doctor',
+            created_at: serverTimestamp(),
+          })
+        }
       }
       onSaved()
     } catch(e) { setErr(e.message) }
     setLoading(false)
   }
 
+  async function remove() {
+    if (!editing) return
+    await deleteDoc(doc(db, 'doctor_appointments', appt.id))
+    onClose()
+  }
+
   return (
-    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',
-      zIndex:999,display:'flex',alignItems:'flex-end'}}
-      onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{background:'white',borderRadius:'18px 18px 0 0',
-        padding:'20px 20px 32px',width:'100%',maxHeight:'90vh',overflow:'auto'}}>
-        <div style={{display:'flex',justifyContent:'space-between',
-          alignItems:'center',marginBottom:18}}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.5)',
+      zIndex:999, display:'flex', alignItems:'flex-end' }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background:'white', borderRadius:'18px 18px 0 0',
+        padding:'22px 20px 32px', width:'100%', maxHeight:'90vh', overflow:'auto' }}>
+
+        <div style={{ display:'flex', justifyContent:'space-between',
+          alignItems:'center', marginBottom:18 }}>
           <div>
-            <div style={{fontWeight:800,fontSize:17}}>Новый приём</div>
-            <div style={{fontSize:12,color:'var(--text3)'}}>
-              {format(date,'d MMMM yyyy',{locale:ru})}
+            <div style={{ fontWeight:800, fontSize:17 }}>
+              {editing ? 'Редактировать приём' : 'Новый приём'}
+            </div>
+            <div style={{ fontSize:12, color:'var(--text3)', marginTop:2 }}>
+              {format(date, 'd MMMM yyyy', { locale:ru })}
             </div>
           </div>
-          <button onClick={onClose} style={{background:'none',border:'none',
-            cursor:'pointer',fontSize:22,color:'var(--text3)'}}>×</button>
+          <button onClick={onClose} style={{ background:'none', border:'none',
+            cursor:'pointer', fontSize:24, color:'var(--text3)', padding:0 }}>×</button>
         </div>
 
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          {/* Type */}
-          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-            {TYPES.map(t=>(
-              <button key={t.v} onClick={()=>setType(t.v)} style={{
-                padding:'7px 12px',borderRadius:20,cursor:'pointer',
-                border:`1.5px solid ${type===t.v?TYPE_COLORS[t.v]:'var(--border)'}`,
-                background:type===t.v?TYPE_COLORS[t.v]+'18':'white',
-                color:type===t.v?TYPE_COLORS[t.v]:'var(--text3)',
-                fontWeight:700,fontSize:12
-              }}>{t.l}</button>
-            ))}
-          </div>
+        {/* Type pills */}
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
+          {Object.entries(TYPE_LABELS).map(([v,l]) => (
+            <button key={v} onClick={() => setType(v)} style={{
+              padding:'7px 12px', borderRadius:20, cursor:'pointer', fontSize:12, fontWeight:700,
+              border:`1.5px solid ${type===v ? TYPE_COLORS[v] : 'var(--border)'}`,
+              background: type===v ? TYPE_COLORS[v]+'20' : 'white',
+              color: type===v ? TYPE_COLORS[v] : 'var(--text3)',
+            }}>{l}</button>
+          ))}
+        </div>
 
-          {/* Title */}
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           <div>
             <label className="label">Название *</label>
-            <input className="input" placeholder="Плановый приём, перевязка..."
-              value={title} onChange={e=>setTitle(e.target.value)}/>
+            <input className="input" placeholder="Плановый приём, перевязка, консультация..."
+              value={title} onChange={e => setTitle(e.target.value)}/>
           </div>
 
-          {/* Patient */}
           <div>
             <label className="label">Пациент</label>
-            <select className="input" value={patient} onChange={e=>setPatient(e.target.value)}>
+            <select className="input" value={patient} onChange={e => setPatient(e.target.value)}>
               <option value="">— Без пациента —</option>
-              {patients.map(p=>(
+              {patients.map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.patient_name}{p.has_account?' (MedNOTE)':''}
+                  {p.patient_name}{p.has_account ? ' ●' : ''}
                 </option>
               ))}
             </select>
+            {patients.length === 0 && (
+              <div style={{ fontSize:11, color:'var(--text3)', marginTop:4 }}>
+                Добавьте пациентов во вкладке «Пациенты»
+              </div>
+            )}
           </div>
 
-          {/* Time + Duration */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
             <div>
               <label className="label">Время</label>
               <input type="time" className="input" value={time}
-                onChange={e=>setTime(e.target.value)}/>
+                onChange={e => setTime(e.target.value)}/>
             </div>
             <div>
               <label className="label">Длительность</label>
               <select className="input" value={duration}
-                onChange={e=>setDuration(parseInt(e.target.value))}>
-                {[15,20,30,45,60,90,120].map(m=>(
+                onChange={e => setDuration(parseInt(e.target.value))}>
+                {[10,15,20,30,45,60,90,120].map(m => (
                   <option key={m} value={m}>{m} мин</option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Notes */}
           <div>
             <label className="label">Примечание</label>
-            <textarea className="input" placeholder="Жалобы, анамнез, цель визита..."
-              rows={2} value={notes} onChange={e=>setNotes(e.target.value)}
-              style={{resize:'none'}}/>
+            <textarea className="input" placeholder="Жалобы, цель визита, анамнез..."
+              rows={3} value={notes} onChange={e => setNotes(e.target.value)}
+              style={{ resize:'none' }}/>
           </div>
 
-          {err&&<div style={{padding:'9px 12px',borderRadius:9,fontSize:12,
-            background:'var(--danger-light)',color:'var(--danger)'}}>❌ {err}</div>}
+          {err && <div style={{ padding:'9px 12px', borderRadius:9, fontSize:12,
+            background:'var(--danger-light)', color:'var(--danger)' }}>❌ {err}</div>}
 
-          <button onClick={save} disabled={loading} style={{
-            width:'100%',padding:'13px',borderRadius:14,border:'none',
-            background:loading?'var(--surface2)':'#1D4ED8',
-            color:loading?'var(--text3)':'white',fontWeight:800,fontSize:14,cursor:'pointer'}}>
-            {loading?'⏳ Сохранение...':'💾 Сохранить приём'}
-          </button>
+          <div style={{ display:'flex', gap:10 }}>
+            {editing && (
+              <button onClick={remove} style={{ flex:1, padding:'12px', borderRadius:12,
+                border:'none', background:'var(--danger-light)', color:'var(--danger)',
+                fontWeight:700, fontSize:13, cursor:'pointer' }}>
+                🗑️ Удалить
+              </button>
+            )}
+            <button onClick={save} disabled={loading} style={{
+              flex:2, padding:'13px', borderRadius:12, border:'none',
+              background: loading ? 'var(--surface2)' : '#1D4ED8',
+              color: loading ? 'var(--text3)' : 'white',
+              fontWeight:800, fontSize:14, cursor: loading ? 'default' : 'pointer',
+            }}>
+              {loading ? '⏳ Сохранение...' : editing ? '💾 Сохранить' : '+ Добавить приём'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export default function DoctorCalendar() {
-  const { user } = useAuth()
-  const [month, setMonth]   = useState(new Date())
-  const [selected, setSelected] = useState(new Date())
-  const [appointments, setAppointments] = useState([])
-  const [patients, setPatients] = useState([])
-  const [showAdd, setShowAdd] = useState(false)
-  const [msg, setMsg] = useState('')
-
-  useEffect(() => {
-    if (!user) return
-    const q = query(collection(db,'doctor_appointments'),where('doctor_uid','==',user.uid))
-    const unsub = onSnapshot(q, snap => {
-      setAppointments(snap.docs.map(d=>({id:d.id,...d.data()})))
-    })
-    return unsub
-  },[user])
-
-  useEffect(() => {
-    if (!user) return
-    const q = query(collection(db,'doctor_patients'),where('doctor_uid','==',user.uid))
-    const unsub = onSnapshot(q, snap => {
-      setPatients(snap.docs.map(d=>({id:d.id,...d.data()})))
-    })
-    return unsub
-  },[user])
-
-  async function markDone(appt) {
-    await deleteDoc(doc(db,'doctor_appointments',appt.id))
-    await addDoc(collection(db,'doctor_appointments'),{
-      ...appt, status:'done', updated_at:serverTimestamp()
-    })
-  }
-
-  async function cancelAppt(appt) {
-    await deleteDoc(doc(db,'doctor_appointments',appt.id))
-  }
-
-  // Build calendar
-  const monthStart = startOfMonth(month)
-  const monthEnd   = endOfMonth(month)
-  const calStart   = startOfWeek(monthStart,{weekStartsOn:1})
-  const calEnd     = endOfWeek(monthEnd,{weekStartsOn:1})
-  const days       = eachDayOfInterval({start:calStart,end:calEnd})
-
-  const selectedStr = format(selected,'yyyy-MM-dd')
-  const dayAppointments = appointments
-    .filter(a=>a.date===selectedStr)
-    .sort((a,b)=>(a.time||'').localeCompare(b.time||''))
-
-  function appointmentsForDay(day) {
-    const ds = format(day,'yyyy-MM-dd')
-    return appointments.filter(a=>a.date===ds)
-  }
-
-  const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']
+// ── Appointment detail card ────────────────────────────────
+function ApptCard({ appt, onEdit, onDone, onCancel }) {
+  const color = TYPE_COLORS[appt.type] || TYPE_COLORS.other
+  const isDone = appt.status === 'done'
+  const isCancelled = appt.status === 'cancelled'
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
-      {showAdd&&(
-        <AppointmentModal date={selected} doctorUid={user.uid} patients={patients}
-          onClose={()=>setShowAdd(false)}
-          onSaved={()=>{setShowAdd(false);setMsg('✅ Приём добавлен');setTimeout(()=>setMsg(''),2500)}}
+    <div style={{
+      background: isDone ? '#F0FDF4' : isCancelled ? 'var(--surface2)' : 'white',
+      borderRadius:14, padding:'14px 16px',
+      border:`1.5px solid ${isDone ? '#A7F3D0' : isCancelled ? 'var(--border)' : color+'44'}`,
+      borderLeft:`4px solid ${isDone ? 'var(--success)' : isCancelled ? 'var(--border2)' : color}`,
+      opacity: isCancelled ? 0.6 : 1,
+    }}>
+      <div style={{ display:'flex', justifyContent:'space-between',
+        alignItems:'flex-start', marginBottom:6, gap:10 }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontWeight:700, fontSize:14,
+            textDecoration: isCancelled ? 'line-through' : 'none' }}>
+            {appt.title}
+          </div>
+          {appt.patient_name && (
+            <div style={{ fontSize:12, color:'var(--text3)', marginTop:2, display:'flex', gap:6 }}>
+              <span>👤 {appt.patient_name}</span>
+              {appt.patient_has_account && (
+                <span style={{ color:'var(--success)', fontWeight:600, fontSize:10 }}>● MedNOTE</span>
+              )}
+            </div>
+          )}
+          {appt.notes && (
+            <div style={{ fontSize:12, color:'var(--text2)', marginTop:4, lineHeight:1.5 }}>
+              {appt.notes.slice(0, 100)}{appt.notes.length > 100 ? '...' : ''}
+            </div>
+          )}
+        </div>
+        <div style={{ textAlign:'right', flexShrink:0 }}>
+          <div style={{ fontWeight:800, fontSize:15, color: isDone ? 'var(--success)' : color }}>
+            {appt.time}
+          </div>
+          <div style={{ fontSize:10, color:'var(--text3)', marginTop:1 }}>
+            {appt.duration_min} мин
+          </div>
+        </div>
+      </div>
+
+      {!isCancelled && !isDone && (
+        <div style={{ display:'flex', gap:6, marginTop:10 }}>
+          <button onClick={() => onEdit(appt)} style={{
+            padding:'7px 12px', borderRadius:9, border:'1px solid var(--border)',
+            background:'white', color:'var(--text2)', fontSize:12, fontWeight:600, cursor:'pointer'
+          }}>✏️ Изменить</button>
+          <button onClick={() => onDone(appt)} style={{
+            flex:1, padding:'7px', borderRadius:9, border:'none',
+            background:'var(--success-light)', color:'var(--success)',
+            fontSize:12, fontWeight:700, cursor:'pointer'
+          }}>✅ Выполнен</button>
+          <button onClick={() => onCancel(appt)} style={{
+            padding:'7px 12px', borderRadius:9, border:'none',
+            background:'var(--danger-light)', color:'var(--danger)',
+            fontSize:12, fontWeight:700, cursor:'pointer'
+          }}>❌</button>
+        </div>
+      )}
+
+      {isDone && (
+        <div style={{ fontSize:12, color:'var(--success)', fontWeight:600, marginTop:6 }}>
+          ✅ Выполнен
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main DoctorCalendar ────────────────────────────────────
+export default function DoctorCalendar() {
+  const { user } = useAuth()
+  const [view,     setView]     = useState('month') // month | week
+  const [month,    setMonth]    = useState(new Date())
+  const [selected, setSelected] = useState(new Date())
+  const [appts,    setAppts]    = useState([])
+  const [patients, setPatients] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [editAppt, setEditAppt] = useState(null)
+  const [msg,      setMsg]      = useState('')
+
+  useEffect(() => {
+    if (!user) return
+    const q = query(collection(db, 'doctor_appointments'),
+      where('doctor_uid', '==', user.uid))
+    return onSnapshot(q, snap =>
+      setAppts(snap.docs.map(d => ({ id:d.id, ...d.data() })))
+    )
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    const q = query(collection(db, 'doctor_patients'),
+      where('doctor_uid', '==', user.uid))
+    return onSnapshot(q, snap =>
+      setPatients(snap.docs.map(d => ({ id:d.id, ...d.data() })))
+    )
+  }, [user])
+
+  async function markDone(appt) {
+    await updateDoc(doc(db, 'doctor_appointments', appt.id), { status:'done' })
+    flash('✅ Приём отмечен выполненным')
+  }
+
+  async function markCancelled(appt) {
+    await updateDoc(doc(db, 'doctor_appointments', appt.id), { status:'cancelled' })
+    flash('Приём отменён')
+  }
+
+  function flash(m) { setMsg(m); setTimeout(() => setMsg(''), 2500) }
+
+  function apptsForDay(day) {
+    const ds = format(day, 'yyyy-MM-dd')
+    return appts
+      .filter(a => a.date === ds && a.status !== 'cancelled')
+      .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+  }
+
+  const selectedStr = format(selected, 'yyyy-MM-dd')
+  const dayAppts = apptsForDay(selected)
+
+  // ── Month calendar ──────────────────────────────────────
+  const monthStart = startOfMonth(month)
+  const days = eachDayOfInterval({
+    start: startOfWeek(monthStart, { weekStartsOn:1 }),
+    end:   endOfWeek(endOfMonth(month), { weekStartsOn:1 }),
+  })
+
+  // ── Week view ───────────────────────────────────────────
+  const weekStart = startOfWeek(selected, { weekStartsOn:1 })
+  const weekDays  = Array.from({ length:7 }, (_, i) => addDays(weekStart, i))
+  const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']
+
+  // Stats for current month
+  const monthStr  = format(month, 'yyyy-MM')
+  const monthAppts = appts.filter(a => (a.date || '').startsWith(monthStr))
+  const doneCount  = monthAppts.filter(a => a.status === 'done').length
+  const totalCount = monthAppts.filter(a => a.status !== 'cancelled').length
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+
+      {(showForm || editAppt) && (
+        <AppointmentForm
+          date={selected}
+          appt={editAppt}
+          doctorUid={user.uid}
+          patients={patients}
+          onClose={() => { setShowForm(false); setEditAppt(null) }}
+          onSaved={() => {
+            setShowForm(false); setEditAppt(null)
+            flash(editAppt ? '✅ Приём обновлён' : '✅ Приём добавлен')
+          }}
         />
       )}
 
+      {/* Header */}
       <div className="page-header">
-        <h1 style={{fontWeight:700,fontSize:18}}>Расписание приёмов</h1>
-        <button onClick={()=>setShowAdd(true)} style={{
-          padding:'8px 16px',borderRadius:10,border:'none',
-          background:'#1D4ED8',color:'white',fontWeight:700,fontSize:13,cursor:'pointer'}}>
-          + Приём
-        </button>
-      </div>
-
-      <div className="page-content" style={{display:'flex',flexDirection:'column',gap:12}}>
-        {msg&&<div style={{padding:'10px 14px',borderRadius:10,fontSize:13,
-          background:'var(--success-light)',border:'1px solid #A7F3D0',color:'var(--success)'}}>
-          {msg}</div>}
-
-        {/* Month nav */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
-          background:'white',borderRadius:14,padding:'12px 16px',border:'1px solid var(--border)'}}>
-          <button onClick={()=>setMonth(d=>addDays(startOfMonth(d),-1))}
-            style={{background:'none',border:'none',cursor:'pointer',fontSize:20,color:'var(--text3)',padding:'0 6px'}}>‹</button>
-          <span style={{fontWeight:700,fontSize:15}}>
-            {format(month,'LLLL yyyy',{locale:ru})}
-          </span>
-          <button onClick={()=>setMonth(d=>addDays(endOfMonth(d),1))}
-            style={{background:'none',border:'none',cursor:'pointer',fontSize:20,color:'var(--text3)',padding:'0 6px'}}>›</button>
-        </div>
-
-        {/* Calendar grid */}
-        <div style={{background:'white',borderRadius:14,padding:'12px',border:'1px solid var(--border)'}}>
-          {/* Day headers */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',marginBottom:4}}>
-            {DOW.map(d=>(
-              <div key={d} style={{textAlign:'center',fontSize:10,fontWeight:700,
-                color:'var(--text3)',padding:'4px 0'}}>{d}</div>
+        <h1 style={{ fontWeight:700, fontSize:18 }}>Расписание приёмов</h1>
+        <div style={{ display:'flex', gap:6 }}>
+          {/* View toggle */}
+          <div style={{ display:'flex', background:'var(--surface2)',
+            borderRadius:9, padding:3, gap:2 }}>
+            {[['month','Месяц'],['week','Неделя']].map(([v,l]) => (
+              <button key={v} onClick={() => setView(v)} style={{
+                padding:'5px 10px', borderRadius:7, border:'none', cursor:'pointer',
+                fontSize:12, fontWeight:700,
+                background: view===v ? 'white' : 'transparent',
+                color: view===v ? 'var(--primary)' : 'var(--text3)',
+                boxShadow: view===v ? 'var(--shadow)' : 'none',
+              }}>{l}</button>
             ))}
           </div>
-          {/* Days */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>
-            {days.map(day=>{
-              const isToday = isSameDay(day,new Date())
-              const isSel   = isSameDay(day,selected)
-              const inMonth = isSameMonth(day,month)
-              const appts   = appointmentsForDay(day)
-              return (
-                <button key={day.toISOString()} onClick={()=>setSelected(day)}
-                  style={{
-                    aspectRatio:'1',display:'flex',flexDirection:'column',
-                    alignItems:'center',justifyContent:'center',borderRadius:10,
-                    border:`2px solid ${isSel?'#1D4ED8':'transparent'}`,
-                    background: isSel?'#EFF6FF': isToday?'var(--primary-light)':'transparent',
-                    cursor:'pointer',position:'relative',padding:2
-                  }}>
-                  <span style={{fontSize:13,fontWeight:isSel||isToday?800:400,
-                    color:!inMonth?'var(--border2)':isSel?'#1D4ED8':isToday?'var(--primary)':'var(--text)'}}>
-                    {format(day,'d')}
-                  </span>
-                  {appts.length>0&&(
-                    <div style={{display:'flex',gap:1,marginTop:1,flexWrap:'wrap',justifyContent:'center'}}>
-                      {appts.slice(0,3).map((a,i)=>(
-                        <div key={i} style={{width:5,height:5,borderRadius:'50%',
-                          background:TYPE_COLORS[a.type]||TYPE_COLORS.other}}/>
-                      ))}
-                    </div>
-                  )}
-                </button>
-              )
-            })}
+          <button onClick={() => { setShowForm(true); setEditAppt(null) }} style={{
+            padding:'8px 14px', borderRadius:10, border:'none',
+            background:'#1D4ED8', color:'white', fontWeight:700, fontSize:13, cursor:'pointer'
+          }}>+ Приём</button>
+        </div>
+      </div>
+
+      <div className="page-content" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+
+        {/* Flash message */}
+        {msg && (
+          <div style={{ padding:'10px 14px', borderRadius:10, fontSize:13, fontWeight:600,
+            background: msg.startsWith('✅') ? 'var(--success-light)' : 'var(--surface2)',
+            border:`1px solid ${msg.startsWith('✅') ? '#A7F3D0' : 'var(--border)'}`,
+            color: msg.startsWith('✅') ? 'var(--success)' : 'var(--text2)' }}>
+            {msg}
           </div>
+        )}
+
+        {/* Month stats */}
+        <div style={{ display:'flex', gap:8 }}>
+          {[
+            [totalCount,    'Приёмов в месяц', '#1D4ED8'],
+            [doneCount,     'Выполнено',        'var(--success)'],
+            [patients.length,'Пациентов',       'var(--purple)'],
+          ].map(([v,l,c]) => (
+            <div key={l} style={{ flex:1, background:'white', borderRadius:12,
+              padding:'12px 10px', border:'1px solid var(--border)', textAlign:'center' }}>
+              <div style={{ fontSize:22, fontWeight:900, color:c }}>{v}</div>
+              <div style={{ fontSize:10, color:'var(--text3)', marginTop:2 }}>{l}</div>
+            </div>
+          ))}
         </div>
 
-        {/* Selected day appointments */}
-        <div style={{fontWeight:700,fontSize:13,color:'var(--text3)'}}>
-          {format(selected,'d MMMM, EEEE',{locale:ru}).toUpperCase()} — {dayAppointments.length} приёмов
+        {/* Month nav */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+          background:'white', borderRadius:14, padding:'12px 16px',
+          border:'1px solid var(--border)' }}>
+          <button onClick={() => setMonth(m => subMonths(m,1))}
+            style={{ background:'none', border:'none', cursor:'pointer',
+              fontSize:20, color:'var(--text3)', padding:'0 8px' }}>‹</button>
+          <button onClick={() => { setMonth(new Date()); setSelected(new Date()) }}
+            style={{ fontWeight:700, fontSize:15, background:'none', border:'none',
+              cursor:'pointer', color:'var(--text)' }}>
+            {format(month, 'LLLL yyyy', { locale:ru })}
+          </button>
+          <button onClick={() => setMonth(m => addMonths(m,1))}
+            style={{ background:'none', border:'none', cursor:'pointer',
+              fontSize:20, color:'var(--text3)', padding:'0 8px' }}>›</button>
         </div>
 
-        {dayAppointments.length===0?(
-          <div style={{textAlign:'center',padding:'20px',color:'var(--text3)',fontSize:13}}>
-            На этот день приёмов нет.
-            <br/>
-            <button onClick={()=>setShowAdd(true)} style={{marginTop:8,background:'none',
-              border:'none',color:'#1D4ED8',fontWeight:700,cursor:'pointer',fontSize:13}}>
+        {/* ── MONTH VIEW ── */}
+        {view === 'month' && (
+          <div style={{ background:'white', borderRadius:14, border:'1px solid var(--border)',
+            overflow:'hidden' }}>
+            {/* Day headers */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+              borderBottom:'1px solid var(--border)' }}>
+              {DOW.map(d => (
+                <div key={d} style={{ textAlign:'center', padding:'8px 0',
+                  fontSize:11, fontWeight:700, color:'var(--text3)' }}>{d}</div>
+              ))}
+            </div>
+            {/* Days */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
+              {days.map(day => {
+                const da    = apptsForDay(day)
+                const sel   = isSameDay(day, selected)
+                const today = isToday(day)
+                const inMon = isSameMonth(day, month)
+                return (
+                  <button key={day.toISOString()} onClick={() => setSelected(day)}
+                    style={{
+                      aspectRatio:'1', display:'flex', flexDirection:'column',
+                      alignItems:'center', justifyContent:'flex-start',
+                      padding:'6px 4px 4px',
+                      border:`2px solid ${sel ? '#1D4ED8' : 'transparent'}`,
+                      borderBottom:'1px solid var(--border)',
+                      background: sel ? '#EFF6FF' : today ? '#F0FDF4' : 'white',
+                      cursor:'pointer',
+                    }}>
+                    <span style={{ fontSize:13, fontWeight: sel||today ? 800 : 400,
+                      color: !inMon ? 'var(--border2)' : sel ? '#1D4ED8' :
+                        today ? 'var(--success)' : 'var(--text)' }}>
+                      {format(day, 'd')}
+                    </span>
+                    <div style={{ display:'flex', gap:1, marginTop:2,
+                      flexWrap:'wrap', justifyContent:'center' }}>
+                      {da.slice(0,3).map((a,i) => (
+                        <div key={i} style={{
+                          width:6, height:6, borderRadius:'50%',
+                          background: TYPE_COLORS[a.type] || TYPE_COLORS.other,
+                        }}/>
+                      ))}
+                      {da.length > 3 && (
+                        <span style={{ fontSize:8, color:'var(--text3)',
+                          lineHeight:1 }}>+{da.length-3}</span>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── WEEK VIEW ── */}
+        {view === 'week' && (
+          <div style={{ background:'white', borderRadius:14, border:'1px solid var(--border)',
+            overflow:'hidden' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)',
+              borderBottom:'1px solid var(--border)' }}>
+              {weekDays.map((day,i) => {
+                const da  = apptsForDay(day)
+                const sel = isSameDay(day, selected)
+                const td  = isToday(day)
+                return (
+                  <button key={i} onClick={() => setSelected(day)} style={{
+                    display:'flex', flexDirection:'column', alignItems:'center',
+                    padding:'8px 4px', border:'none', cursor:'pointer',
+                    background: sel ? '#EFF6FF' : 'white',
+                    borderBottom: sel ? '2px solid #1D4ED8' : '2px solid transparent',
+                  }}>
+                    <span style={{ fontSize:10, color:'var(--text3)',
+                      fontWeight:600 }}>{DOW[i]}</span>
+                    <span style={{ fontSize:16, fontWeight: sel||td ? 800 : 400,
+                      color: sel ? '#1D4ED8' : td ? 'var(--success)' : 'var(--text)',
+                      width:30, height:30, borderRadius:'50%',
+                      background: td && !sel ? '#F0FDF4' : 'transparent',
+                      display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      {format(day,'d')}
+                    </span>
+                    {da.length > 0 && (
+                      <div style={{ width:6, height:6, borderRadius:'50%',
+                        background:'#1D4ED8', marginTop:2 }}/>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Selected day appointments ── */}
+        <div style={{ fontWeight:700, fontSize:12, color:'var(--text3)',
+          letterSpacing:'.3px', textTransform:'uppercase' }}>
+          {format(selected, 'd MMMM, EEEE', { locale:ru })}
+          {' '}—{' '}
+          {dayAppts.length > 0 ? `${dayAppts.length} приём${dayAppts.length > 1 ? 'а' : ''}` : 'нет приёмов'}
+        </div>
+
+        {dayAppts.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'30px 20px', color:'var(--text3)' }}>
+            <div style={{ fontSize:36, marginBottom:10 }}>📅</div>
+            <div style={{ fontSize:13 }}>На этот день приёмов нет</div>
+            <button onClick={() => { setShowForm(true); setEditAppt(null) }}
+              style={{ marginTop:12, background:'none', border:'none',
+                color:'#1D4ED8', fontWeight:700, cursor:'pointer', fontSize:13 }}>
               + Добавить приём
             </button>
           </div>
-        ):(
-          dayAppointments.map(a=>(
-            <div key={a.id} style={{
-              background:'white',borderRadius:14,padding:'14px 16px',
-              border:`1.5px solid ${TYPE_COLORS[a.type]||'var(--border)'}`,
-              borderLeft:`4px solid ${TYPE_COLORS[a.type]||'var(--border)'}`
-            }}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
-                <div>
-                  <div style={{fontWeight:700,fontSize:14}}>{a.title}</div>
-                  {a.patient_name&&(
-                    <div style={{fontSize:12,color:'var(--text3)',marginTop:2}}>
-                      👤 {a.patient_name}
-                      {a.patient_has_account&&<span style={{fontSize:10,color:'var(--success)',marginLeft:4}}>● MedNOTE</span>}
-                    </div>
-                  )}
-                </div>
-                <div style={{textAlign:'right',flexShrink:0,marginLeft:10}}>
-                  <div style={{fontWeight:800,fontSize:14,color:TYPE_COLORS[a.type]||'var(--text)'}}>
-                    {a.time}
-                  </div>
-                  <div style={{fontSize:10,color:'var(--text3)'}}>{a.duration_min} мин</div>
-                </div>
-              </div>
-              {a.notes&&<div style={{fontSize:12,color:'var(--text2)',marginBottom:8,lineHeight:1.5}}>
-                {a.notes}</div>}
-              <div style={{display:'flex',gap:6}}>
-                <button onClick={()=>markDone(a)} style={{flex:1,padding:'7px',borderRadius:9,
-                  border:'none',background:'var(--success-light)',color:'var(--success)',
-                  fontWeight:700,fontSize:12,cursor:'pointer'}}>✅ Выполнен</button>
-                <button onClick={()=>cancelAppt(a)} style={{flex:1,padding:'7px',borderRadius:9,
-                  border:'none',background:'var(--danger-light)',color:'var(--danger)',
-                  fontWeight:700,fontSize:12,cursor:'pointer'}}>❌ Отменить</button>
-              </div>
-            </div>
-          ))
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {dayAppts.map(a => (
+              <ApptCard key={a.id} appt={a}
+                onEdit={a => { setEditAppt(a); setShowForm(true) }}
+                onDone={markDone}
+                onCancel={markCancelled}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Cancelled appointments (collapsed) */}
+        {appts.filter(a => a.date === selectedStr && a.status === 'cancelled').length > 0 && (
+          <div style={{ fontSize:12, color:'var(--text3)', textAlign:'center' }}>
+            + {appts.filter(a => a.date === selectedStr && a.status === 'cancelled').length} отменённых
+          </div>
         )}
       </div>
     </div>
