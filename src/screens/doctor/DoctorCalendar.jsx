@@ -431,8 +431,7 @@ export default function DoctorCalendar() {
 
         {/* ── MONTH VIEW ── */}
         {view === 'month' && (
-          <div style={{ background:'white', borderRadius:14, border:'1px solid var(--border)',
-            overflow:'hidden' }}>
+          <div style={{ background:'white', borderRadius:14, border:'1px solid var(--border)' }}>
             {/* Day headers */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)',
               borderBottom:'1px solid var(--border)' }}>
@@ -441,9 +440,8 @@ export default function DoctorCalendar() {
                   fontSize:11, fontWeight:700, color:'var(--text3)' }}>{d}</div>
               ))}
             </div>
-            {/* Days */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-              gridAutoRows:'52px' }}>
+            {/* Days — auto height, no overflow clipping */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
               {days.map(day => {
                 const da    = apptsForDay(day)
                 const sel   = isSameDay(day, selected)
@@ -452,11 +450,14 @@ export default function DoctorCalendar() {
                 return (
                   <button key={day.toISOString()} onClick={() => setSelected(day)}
                     style={{
-                      height:'52px', display:'flex', flexDirection:'column',
+                      minHeight:'56px', display:'flex', flexDirection:'column',
                       alignItems:'center', justifyContent:'flex-start',
-                      padding:'6px 4px 4px',
-                      border:`2px solid ${sel ? '#1D4ED8' : 'transparent'}`,
+                      padding:'7px 4px 5px',
+                      border:'none',
                       borderBottom:'1px solid var(--border)',
+                      borderRight:'1px solid var(--border)',
+                      outline: sel ? '2px solid #1D4ED8' : 'none',
+                      outlineOffset: '-2px',
                       background: sel ? '#EFF6FF' : today ? '#F0FDF4' : 'white',
                       cursor:'pointer',
                     }}>

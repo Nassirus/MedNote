@@ -117,6 +117,33 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
   const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()
   const doneToday = items.filter(i => i.done).length
 
+  // Weekly adherence — current week Mon-Sun
+  const weeklyData = (() => {
+    const now  = new Date()
+    const dow  = (now.getDay() + 6) % 7 // Mon=0, Sun=6
+    const days = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']
+    return days.map((day, i) => {
+      const d  = new Date(now)
+      d.setHours(0,0,0,0)
+      d.setDate(now.getDate() - dow + i)
+      const ds = d.toISOString().slice(0,10)
+      const di = items.filter(it => it.date === ds)
+      const pct = di.length > 0 ? Math.round(di.filter(it => it.done).length / di.length * 100) : 0
+      return { day, pct, isFuture: i > dow, hasItems: di.length > 0 }
+    })
+  })()
+
+  const weekAvg = (() => {
+    const past = weeklyData.filter(d => !d.isFuture && d.hasItems)
+    if (!past.length) return null
+    return Math.round(past.reduce((s,d) => s + d.pct, 0) / past.length)
+  })()
+
+  // Active courses = unique title+type combinations
+  const activeCourses = Object.keys(
+    items.reduce((m, it) => { m[it.type + '__' + it.title] = true; return m }, {})
+  ).length
+
   function buildPayload() {
     return {
       source: 'MedNOTE', version: '2.0',
