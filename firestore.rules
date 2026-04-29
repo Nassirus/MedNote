@@ -3,14 +3,15 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── schedule_items ────────────────────────────────────────────────
-    // Patient reads/writes own items only.
-    // Doctor writes to patient's items via doctor_appointments
-    // (direct doctor→patient item creation happens in DoctorCalendar, verified by patient_uid match)
     match /schedule_items/{itemId} {
-      allow read, update, delete: if request.auth != null &&
+      // Only authenticated users can read — doctor needs to see patient items
+      allow read: if request.auth != null;
+
+      // Only owner can update/delete their items
+      allow update, delete: if request.auth != null &&
         resource.data.user_id == request.auth.uid;
 
-      // Create: own items OR authenticated user (doctors creating for patients)
+      // Create: own items OR doctor adding to patient schedule
       allow create: if request.auth != null && (
         request.resource.data.user_id == request.auth.uid ||
         request.resource.data.added_by == 'doctor'
@@ -18,15 +19,12 @@ service cloud.firestore {
     }
 
     // ── profiles ──────────────────────────────────────────────────────
-    // Own profile: full access
-    // Any authenticated user: read-only (for doctor to look up patient by UID)
     match /profiles/{uid} {
       allow read:  if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == uid;
     }
 
     // ── doctor_patients ───────────────────────────────────────────────
-    // Doctor manages their own patient links
     match /doctor_patients/{docId} {
       allow read, create: if request.auth != null && (
         resource == null ||
@@ -37,7 +35,6 @@ service cloud.firestore {
     }
 
     // ── doctor_appointments ───────────────────────────────────────────
-    // Doctor manages their own appointments
     match /doctor_appointments/{docId} {
       allow read, create: if request.auth != null && (
         resource == null ||
@@ -48,7 +45,6 @@ service cloud.firestore {
     }
 
     // ── prescription_requests ─────────────────────────────────────────
-    // Doctor creates, patient accepts/rejects
     match /prescription_requests/{docId} {
       allow create: if request.auth != null;
       allow read: if request.auth != null && (
@@ -61,7 +57,6 @@ service cloud.firestore {
     }
 
     // ── notes ─────────────────────────────────────────────────────────
-    // Own notes only. Using request.resource on create (resource is null for new docs)
     match /notes/{docId} {
       allow read, update, delete: if request.auth != null &&
         resource.data.user_id == request.auth.uid;
