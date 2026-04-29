@@ -69,7 +69,14 @@ function RequestItemCard({ item, onChange }) {
 
           {/* Start date */}
           <div>
-            <label className="label">Дата начала</label>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <label className="label">Дата начала</label>
+              {item.start_date && item.start_date !== format(new Date(), 'yyyy-MM-dd') && (
+                <span style={{ fontSize:10, color:'#1D4ED8', fontWeight:600 }}>
+                  📅 Назначено врачом
+                </span>
+              )}
+            </div>
             <input type="date" className="input"
               value={item.start_date || format(new Date(), 'yyyy-MM-dd')}
               onChange={e => onChange({ ...item, start_date: e.target.value })}/>
@@ -130,7 +137,8 @@ function RequestCard({ request, onAccept, onReject }) {
     (request.items || []).map((item, i) => ({
       ...item,
       _key: i,
-      start_date: format(new Date(), 'yyyy-MM-dd'),
+      // Use doctor's start_date if set, otherwise default to today
+      start_date: item.start_date || format(new Date(), 'yyyy-MM-dd'),
       time_slots: item.time_slots || [item.time || '08:00'],
     }))
   )
