@@ -280,95 +280,143 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
   )
 }
 
-// ── Prescription Form ──────────────────────────────────────
+
+// ── Prescription Sheet — расширенная форма назначения ────────
 function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved }) {
-  const [mode, setMode] = useState('manual')
-  const [file, setFile] = useState(null)
-  const [items, setItems] = useState([{
-    type:'medication',title:'',dose:'',times_per_day:1,first_time:'08:00',duration_days:7,notes:''
-  }])
+  const [mode,    setMode]    = useState('manual')
+  const [file,    setFile]    = useState(null)
   const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState('')
+  const [err,     setErr]     = useState('')
 
-  const TYPES=[{v:'medication',l:'💊 Лекарство'},{v:'exercise',l:'🏃 ЛФК'},
-    {v:'procedure',l:'🩺 Процедура'},{v:'appointment',l:'📅 Визит'},
-    {v:'restriction',l:'⚠️ Ограничение'},{v:'nutrition',l:'🥗 Диета'}]
+  // Each item has main fields + optional advanced fields
+  const newItem = () => ({
+    type:'medication', title:'', dose:'', route:'',         // Основные
+    times_per_day:1, time_slots:['08:00'],                  // Время приёма
+    duration_days:7, start_date:'',                         // Курс
+    notes:'', contraindications:'', special_instructions:'',// Доп.
+    showAdvanced: false,
+  })
+  const [items, setItems] = useState([newItem()])
 
-  function upd(i,f,v){setItems(p=>p.map((x,j)=>j===i?{...x,[f]:v}:x))}
+  const TYPES=[
+    {v:'medication',  l:'💊 Препарат'},
+    {v:'exercise',    l:'🏃 ЛФК/Упражнение'},
+    {v:'procedure',   l:'🩺 Процедура'},
+    {v:'appointment', l:'📅 Визит к врачу'},
+    {v:'restriction', l:'⚠️ Ограничение'},
+    {v:'nutrition',   l:'🥗 Диета/Питание'},
+  ]
 
-  async function analyzePhoto(){
-    if(!file)return; setLoading(true); setErr('')
-    try{
-      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)})
-      const parsed=await analyzeWithGemini({imageBase64:b64,mimeType:file.type||'image/jpeg'})
-      if(parsed.length){
-        setItems(parsed.map(p=>({type:p.type||'medication',title:p.title||'',dose:p.dose||'',
-          times_per_day:p.times_per_day||1,first_time:p.time_slots?.[0]||'08:00',
-          duration_days:p.duration_days||7,notes:p.notes||''})))
+  const ROUTES = ['Внутрь (перорально)','Сублингвально','В/м инъекция','В/в инъекция',
+    'Местно','Ингаляционно','Ректально','Трансдермально','Капли (глазные)','Капли (ушные)']
+
+  function upd(i, field, val) {
+    setItems(p => p.map((x,j) => j!==i ? x : { ...x, [field]: val }))
+  }
+
+  function setSlotTime(i, slotIdx, val) {
+    setItems(p => p.map((x,j) => {
+      if (j!==i) return x
+      const slots = [...(x.time_slots||['08:00'])]
+      slots[slotIdx] = val
+      return { ...x, time_slots: slots }
+    }))
+  }
+
+  function setTimesPerDay(i, n) {
+    const defaults = ['08:00','13:00','18:00','22:00','11:00','15:00']
+    setItems(p => p.map((x,j) => {
+      if (j!==i) return x
+      const existing = x.time_slots || ['08:00']
+      const slots = Array.from({length:n}, (_,k) => existing[k] || defaults[k] || '08:00')
+      return { ...x, times_per_day:n, time_slots:slots }
+    }))
+  }
+
+  async function analyzePhoto() {
+    if (!file) return; setLoading(true); setErr('')
+    try {
+      const b64 = await new Promise((res,rej)=>{
+        const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file)
+      })
+      const parsed = await analyzeWithGemini({imageBase64:b64, mimeType:file.type||'image/jpeg'})
+      if (parsed.length) {
+        setItems(parsed.map(p => ({
+          ...newItem(),
+          type:          p.type||'medication',
+          title:         p.title||'',
+          dose:          p.dose||'',
+          times_per_day: p.times_per_day||1,
+          time_slots:    p.time_slots||['08:00'],
+          duration_days: p.duration_days||7,
+          notes:         p.notes||'',
+        })))
         setMode('manual')
-      }else{setErr('ИИ не нашёл назначений. Введите вручную.')}
-    }catch(e){setErr(e.message)}
+      } else { setErr('ИИ не нашёл назначений. Введите вручную.') }
+    } catch(e) { setErr(e.message) }
     setLoading(false)
   }
 
-  async function save(){
-    const valid=items.filter(i=>i.title.trim())
-    if(!valid.length){setErr('Введите хотя бы одно назначение');return}
-    if(!patient.patient_uid){setErr('Этот пациент без аккаунта MedNOTE — назначения можно только записать в приём');return}
-    setLoading(true);setErr('')
-    try{
-      const SLOTS={1:['08:00'],2:['08:00','20:00'],3:['08:00','14:00','20:00']}
-      // Build items array for the request
-      const requestItems = valid.map(item=>({
-        type:item.type,
-        title:item.title.trim(),
-        dose:item.dose||null,
-        notes:item.notes||null,
-        time:item.first_time||'08:00',
-        time_slots:SLOTS[Math.min(3,item.times_per_day||1)]||[item.first_time||'08:00'],
-        times_per_day:item.times_per_day||1,
-        duration_days:item.duration_days||7,
-        is_one_time:false,
+  async function save() {
+    const valid = items.filter(i => i.title.trim())
+    if (!valid.length) { setErr('Введите хотя бы одно назначение'); return }
+    if (!patient.patient_uid) { setErr('Пациент без аккаунта MedNOTE'); return }
+    setLoading(true); setErr('')
+    try {
+      const requestItems = valid.map(item => ({
+        type:           item.type,
+        title:          item.title.trim(),
+        dose:           item.dose||null,
+        route:          item.route||null,
+        notes:          [item.notes, item.special_instructions].filter(Boolean).join(' | ') || null,
+        contraindications: item.contraindications||null,
+        time:           item.time_slots?.[0]||'08:00',
+        time_slots:     item.time_slots||['08:00'],
+        times_per_day:  item.times_per_day||1,
+        duration_days:  item.duration_days||7,
+        start_date:     item.start_date||null,
+        is_one_time:    false,
       }))
-      // Send as a REQUEST — patient must accept
       await addDoc(collection(db,'prescription_requests'),{
-        patient_uid:   patient.patient_uid,
-        patient_name:  patient.patient_name,
-        doctor_uid:    doctorUid||'',
-        doctor_name:   doctorProfile?.name||'Врач',
-        clinic_name:   doctorProfile?.clinic_name||'',
-        items:         requestItems,
-        status:        'pending',
-        created_at:    serverTimestamp(),
+        patient_uid:  patient.patient_uid,
+        patient_name: patient.patient_name,
+        doctor_uid:   doctorUid||'',
+        doctor_name:  doctorProfile?.name||'Врач',
+        clinic_name:  doctorProfile?.clinic_name||'',
+        items:        requestItems,
+        status:       'pending',
+        created_at:   serverTimestamp(),
       })
       onSaved(valid.length)
-    }catch(e){setErr('Ошибка: '+e.message)}
+    } catch(e) { setErr('Ошибка: '+e.message) }
     setLoading(false)
   }
 
-  return(
+  return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:998,
       display:'flex',alignItems:'flex-end'}} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{background:'white',borderRadius:'18px 18px 0 0',padding:'20px 20px 32px',
-        width:'100%',maxHeight:'90vh',overflow:'auto'}}>
+        width:'100%',maxHeight:'92vh',overflow:'auto'}}>
+
+        {/* Header */}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
           <div>
-            <div style={{fontWeight:800,fontSize:16}}>Назначения</div>
+            <div style={{fontWeight:800,fontSize:17}}>📋 Назначения</div>
             <div style={{fontSize:12,color:'var(--text3)'}}>для {patient.patient_name}</div>
           </div>
-          <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:22,color:'var(--text3)'}}>×</button>
+          <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:24,color:'var(--text3)'}}>×</button>
         </div>
 
-        {!patient.patient_uid&&(
+        {!patient.patient_uid && (
           <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,
             padding:'10px 12px',marginBottom:12,fontSize:12,color:'#92400E'}}>
-            ⚠️ Пациент без аккаунта MedNOTE. Назначения не синхронизируются в приложение.
-            Добавьте приём в календарь вручную.
+            ⚠️ Пациент без аккаунта MedNOTE — запрос не будет отправлен.
           </div>
         )}
 
+        {/* Mode tabs */}
         <div style={{display:'flex',gap:6,marginBottom:14}}>
-          {[['manual','✏️ Вручную'],['photo','📷 Фото']].map(([m,l])=>(
+          {[['manual','✏️ Вручную'],['photo','📷 Фото выписки']].map(([m,l])=>(
             <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:'9px',borderRadius:10,
               cursor:'pointer',border:`1.5px solid ${mode===m?'#1D4ED8':'var(--border)'}`,
               background:mode===m?'#EFF6FF':'white',color:mode===m?'#1D4ED8':'var(--text3)',
@@ -376,78 +424,213 @@ function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved
           ))}
         </div>
 
-        {mode==='photo'&&(
+        {/* Photo mode */}
+        {mode==='photo' && (
           <div style={{marginBottom:12}}>
-            <input type="file" accept="image/*" id="rx-img" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/>
+            <input type="file" accept="image/*" id="rx-img" style={{display:'none'}}
+              onChange={e=>setFile(e.target.files[0])}/>
             <label htmlFor="rx-img" style={{display:'block',padding:16,borderRadius:12,cursor:'pointer',
-              border:'2px dashed var(--border)',background:'var(--surface2)',textAlign:'center',fontSize:13,color:'var(--text3)'}}>
+              border:'2px dashed var(--border)',background:'var(--surface2)',textAlign:'center',
+              fontSize:13,color:'var(--text3)'}}>
               {file?`📎 ${file.name}`:'📷 Выбрать фото выписки'}
             </label>
-            {file&&<button onClick={analyzePhoto} disabled={loading} style={{width:'100%',marginTop:8,
-              padding:'11px',borderRadius:10,border:'none',background:loading?'var(--surface2)':'#1D4ED8',
-              color:loading?'var(--text3)':'white',fontWeight:700,fontSize:13,cursor:'pointer'}}>
-              {loading?'⏳ Анализирую...':'🤖 Анализировать ИИ'}</button>}
+            {file && (
+              <button onClick={analyzePhoto} disabled={loading} style={{width:'100%',marginTop:8,
+                padding:'11px',borderRadius:10,border:'none',
+                background:loading?'var(--surface2)':'#1D4ED8',
+                color:loading?'var(--text3)':'white',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+                {loading?'⏳ Анализирую...':'🤖 Анализировать ИИ'}
+              </button>
+            )}
           </div>
         )}
 
-        {mode==='manual'&&(
-          <div style={{display:'flex',flexDirection:'column',gap:10}}>
-            {items.map((item,i)=>(
-              <div key={i} style={{background:'var(--surface2)',borderRadius:12,padding:12,border:'1px solid var(--border)'}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                  <span style={{fontSize:11,fontWeight:700,color:'var(--text3)'}}>#{i+1}</span>
-                  {items.length>1&&<button onClick={()=>setItems(p=>p.filter((_,j)=>j!==i))}
-                    style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)'}}>✕</button>}
+        {/* Manual mode */}
+        {mode==='manual' && (
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            {items.map((item,i) => (
+              <div key={i} style={{background:'var(--surface2)',borderRadius:14,
+                border:'1px solid var(--border)',overflow:'hidden'}}>
+
+                {/* Item header */}
+                <div style={{display:'flex',justifyContent:'space-between',
+                  alignItems:'center',padding:'10px 14px 0'}}>
+                  <span style={{fontSize:11,fontWeight:700,color:'#1D4ED8',
+                    textTransform:'uppercase',letterSpacing:.5}}>
+                    Назначение {i+1}
+                  </span>
+                  {items.length>1 && (
+                    <button onClick={()=>setItems(p=>p.filter((_,j)=>j!==i))}
+                      style={{background:'none',border:'none',cursor:'pointer',
+                        color:'var(--danger)',fontSize:18,lineHeight:1}}>✕</button>
+                  )}
                 </div>
-                <select value={item.type} onChange={e=>upd(i,'type',e.target.value)}
-                  className="input" style={{marginBottom:8,fontSize:12}}>
-                  {TYPES.map(t=><option key={t.v} value={t.v}>{t.l}</option>)}
-                </select>
-                <input className="input" placeholder="Название *" value={item.title}
-                  onChange={e=>upd(i,'title',e.target.value)} style={{marginBottom:8,fontSize:13}}/>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
-                  <input className="input" placeholder="Дозировка" value={item.dose}
-                    onChange={e=>upd(i,'dose',e.target.value)} style={{fontSize:12}}/>
-                  <input type="number" className="input" placeholder="Дней" min={1}
-                    value={item.duration_days||''} onChange={e=>upd(i,'duration_days',parseInt(e.target.value)||null)}
-                    style={{fontSize:12}}/>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:8,alignItems:'center'}}>
-                  <div style={{display:'flex',gap:4}}>
-                    {[1,2,3].map(n=><button key={n} onClick={()=>upd(i,'times_per_day',n)} style={{
-                      width:32,height:32,borderRadius:8,border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
-                      background:item.times_per_day===n?'#1D4ED8':'var(--surface2)',
-                      color:item.times_per_day===n?'white':'var(--text3)'}}>{n}×</button>)}
+
+                <div style={{padding:'10px 14px 14px',display:'flex',flexDirection:'column',gap:10}}>
+
+                  {/* Type selector */}
+                  <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                    {TYPES.map(t=>(
+                      <button key={t.v} onClick={()=>upd(i,'type',t.v)} style={{
+                        padding:'5px 10px',borderRadius:20,cursor:'pointer',fontSize:11,fontWeight:700,
+                        border:`1.5px solid ${item.type===t.v?'#1D4ED8':'var(--border)'}`,
+                        background:item.type===t.v?'#EFF6FF':'white',
+                        color:item.type===t.v?'#1D4ED8':'var(--text3)'}}>
+                        {t.l}
+                      </button>
+                    ))}
                   </div>
-                  <input type="time" className="input" value={item.first_time}
-                    onChange={e=>upd(i,'first_time',e.target.value)} style={{fontSize:12}}/>
+
+                  {/* Title */}
+                  <input className="input" placeholder="Название препарата / процедуры *"
+                    value={item.title} onChange={e=>upd(i,'title',e.target.value)}
+                    style={{fontSize:14,fontWeight:600}}/>
+
+                  {/* Dose + Route */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                    <div>
+                      <label className="label">Дозировка</label>
+                      <input className="input" placeholder="100мг, 2 табл., 5мл..."
+                        value={item.dose} onChange={e=>upd(i,'dose',e.target.value)}
+                        style={{fontSize:12}}/>
+                    </div>
+                    <div>
+                      <label className="label">Путь введения</label>
+                      <select className="input" value={item.route} onChange={e=>upd(i,'route',e.target.value)}
+                        style={{fontSize:12}}>
+                        <option value="">— выбрать —</option>
+                        {ROUTES.map(r=><option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Times per day + individual time slots */}
+                  <div>
+                    <label className="label">Приёмов в день</label>
+                    <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}>
+                      {[1,2,3,4,5,6].map(n=>(
+                        <button key={n} onClick={()=>setTimesPerDay(i,n)} style={{
+                          width:36,height:36,borderRadius:9,border:'none',cursor:'pointer',
+                          fontSize:13,fontWeight:700,
+                          background:item.times_per_day===n?'#1D4ED8':'var(--surface2)',
+                          color:item.times_per_day===n?'white':'var(--text3)'}}>
+                          {n}×
+                        </button>
+                      ))}
+                    </div>
+                    {/* Individual time inputs per slot */}
+                    <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                      {(item.time_slots||['08:00']).map((t,si)=>(
+                        <div key={si} style={{display:'flex',alignItems:'center',gap:4}}>
+                          <span style={{fontSize:11,color:'var(--text3)',fontWeight:600,
+                            minWidth:14,textAlign:'right'}}>{si+1}.</span>
+                          <input type="time" className="input"
+                            value={t} onChange={e=>setSlotTime(i,si,e.target.value)}
+                            style={{width:100,fontSize:12,padding:'7px 8px'}}/>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Duration + Start date */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                    <div>
+                      <label className="label">Количество дней</label>
+                      <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:4}}>
+                        {[3,5,7,10,14,21,30].map(d=>(
+                          <button key={d} onClick={()=>upd(i,'duration_days',d)} style={{
+                            padding:'4px 8px',borderRadius:8,border:'none',cursor:'pointer',
+                            fontSize:11,fontWeight:700,
+                            background:item.duration_days===d?'#1D4ED8':'var(--surface2)',
+                            color:item.duration_days===d?'white':'var(--text3)'}}>
+                            {d}д
+                          </button>
+                        ))}
+                      </div>
+                      <input type="number" className="input" placeholder="или введите"
+                        min={1} max={365} value={item.duration_days||''}
+                        onChange={e=>upd(i,'duration_days',parseInt(e.target.value)||null)}
+                        style={{fontSize:12}}/>
+                    </div>
+                    <div>
+                      <label className="label">Начало курса</label>
+                      <input type="date" className="input"
+                        value={item.start_date||''} onChange={e=>upd(i,'start_date',e.target.value)}
+                        style={{fontSize:12}}/>
+                      <div style={{fontSize:10,color:'var(--text3)',marginTop:3}}>
+                        Пустое = пациент выберет сам
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes (always visible) */}
+                  <div>
+                    <label className="label">Примечание / инструкция</label>
+                    <textarea className="input" placeholder="Принимать после еды, запивать водой..."
+                      rows={2} value={item.notes||''} onChange={e=>upd(i,'notes',e.target.value)}
+                      style={{resize:'none',fontSize:12}}/>
+                  </div>
+
+                  {/* Advanced toggle */}
+                  <button onClick={()=>upd(i,'showAdvanced',!item.showAdvanced)} style={{
+                    background:'none',border:'none',cursor:'pointer',fontSize:12,
+                    color:'#1D4ED8',fontWeight:600,textAlign:'left',padding:0}}>
+                    {item.showAdvanced?'▲ Скрыть доп. поля':'▼ Дополнительные поля'}
+                  </button>
+
+                  {/* Advanced fields */}
+                  {item.showAdvanced && (
+                    <div style={{display:'flex',flexDirection:'column',gap:8,
+                      background:'white',borderRadius:10,padding:'10px 12px',
+                      border:'1px solid var(--border)'}}>
+                      <div>
+                        <label className="label">⚠️ Противопоказания / предостережения</label>
+                        <textarea className="input" placeholder="Нельзя при беременности, совместно с..."
+                          rows={2} value={item.contraindications||''}
+                          onChange={e=>upd(i,'contraindications',e.target.value)}
+                          style={{resize:'none',fontSize:12}}/>
+                      </div>
+                      <div>
+                        <label className="label">📋 Особые инструкции</label>
+                        <textarea className="input" placeholder="Хранить в холодильнике, не делить таблетку..."
+                          rows={2} value={item.special_instructions||''}
+                          onChange={e=>upd(i,'special_instructions',e.target.value)}
+                          style={{resize:'none',fontSize:12}}/>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
-            <button onClick={()=>setItems(p=>[...p,{type:'medication',title:'',dose:'',
-              times_per_day:1,first_time:'08:00',duration_days:7,notes:''}])}
-              style={{padding:'9px',borderRadius:10,border:'1.5px dashed var(--border)',
-                background:'transparent',color:'#1D4ED8',fontWeight:700,fontSize:13,cursor:'pointer'}}>
-              + Ещё назначение
+
+            <button onClick={()=>setItems(p=>[...p,newItem()])} style={{
+              padding:'11px',borderRadius:12,border:'1.5px dashed #1D4ED8',
+              background:'transparent',color:'#1D4ED8',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+              + Добавить ещё назначение
             </button>
           </div>
         )}
 
-        {err&&<div style={{padding:'9px 12px',borderRadius:9,fontSize:12,marginTop:10,
-          background:'var(--danger-light)',color:'var(--danger)'}}>❌ {err}</div>}
+        {err && (
+          <div style={{padding:'10px 12px',borderRadius:10,fontSize:12,marginTop:10,
+            background:'var(--danger-light)',border:'1px solid #FECACA',color:'var(--danger)'}}>
+            ❌ {err}
+          </div>
+        )}
 
-        {patient.patient_uid&&(
-          <button onClick={save} disabled={loading} style={{width:'100%',marginTop:14,
-            padding:'13px',borderRadius:14,border:'none',
+        {patient.patient_uid && (
+          <button onClick={save} disabled={loading} style={{
+            width:'100%',marginTop:16,padding:'14px',borderRadius:14,border:'none',
             background:loading?'var(--surface2)':'#1D4ED8',
-            color:loading?'var(--text3)':'white',fontWeight:800,fontSize:14,cursor:'pointer'}}>
-            {loading?'⏳ Сохранение...':'💾 Сохранить в MedNOTE пациента'}
+            color:loading?'var(--text3)':'white',fontWeight:800,fontSize:15,cursor:'pointer'}}>
+            {loading?'⏳ Отправка...':'📨 Отправить запрос пациенту'}
           </button>
         )}
       </div>
     </div>
   )
 }
+
 
 // ── Patient Detail ─────────────────────────────────────────
 function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {

@@ -488,8 +488,7 @@ export default function DoctorCalendar() {
 
         {/* ── WEEK VIEW — time grid ── */}
         {view === 'week' && (
-          <div style={{ background:'white', borderRadius:14, border:'1px solid var(--border)',
-            overflow:'hidden' }}>
+          <div style={{ background:'white', borderRadius:14, border:'1px solid var(--border)' }}>
 
             {/* Day header row */}
             <div style={{ display:'grid', gridTemplateColumns:'48px repeat(7,1fr)',
@@ -530,7 +529,7 @@ export default function DoctorCalendar() {
             </div>
 
             {/* Time grid — 07:00 to 21:00 */}
-            <div style={{ overflowY:'auto', maxHeight:'52vh' }}>
+            <div style={{ overflowY:'auto', maxHeight:'calc(100dvh - 380px)', minHeight:300 }}>
               {Array.from({ length:15 }, (_, hi) => hi + 7).map(hour => {
                 return (
                   <div key={hour} style={{ display:'grid',

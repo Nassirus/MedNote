@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { generateQRSVG, getPatientQRData } from '../lib/qrUtils'
 import { useAuth } from '../context/AuthContext'
 // googleCalendar loaded lazily in handlers below
@@ -36,6 +36,57 @@ function GoogleLogo({ size = 18 }) {
     </svg>
   )
 }
+
+// Mini badge shown in Profile when there are pending requests
+function PrescriptionRequestsBadge({ onOpen }) {
+  const { user } = useAuth()
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    let unsub = () => {}
+    // Import Firestore modules at component level
+    Promise.all([
+      import('firebase/firestore'),
+      import('../lib/firebase'),
+    ]).then(([fs, { db }]) => {
+      const q = fs.query(
+        fs.collection(db, 'prescription_requests'),
+        fs.where('patient_uid', '==', user.uid),
+        fs.where('status', '==', 'pending')
+      )
+      unsub = fs.onSnapshot(q, snap => setCount(snap.size), () => {})
+    }).catch(() => {})
+    return () => unsub()
+  }, [user])
+
+  if (count === 0) return null
+
+  return (
+    <button onClick={onOpen} style={{
+      display:'flex', alignItems:'center', gap:12, padding:'14px 16px',
+      background:'#FFFBEB', border:'1.5px solid #FDE68A',
+      borderLeft:'4px solid #F59E0B', borderRadius:12,
+      cursor:'pointer', textAlign:'left', width:'100%',
+    }}>
+      <span style={{ fontSize:22 }}>📨</span>
+      <div style={{ flex:1 }}>
+        <div style={{ fontWeight:700, fontSize:14, color:'#92400E' }}>
+          Запросы от врача
+        </div>
+        <div style={{ fontSize:11, color:'#B45309', marginTop:2 }}>
+          {count} назначени{count === 1 ? 'е' : 'й'} ожидает подтверждения
+        </div>
+      </div>
+      <div style={{ background:'#F59E0B', color:'white', borderRadius:'50%',
+        width:24, height:24, display:'flex', alignItems:'center',
+        justifyContent:'center', fontWeight:800, fontSize:12, flexShrink:0 }}>
+        {count}
+      </div>
+    </button>
+  )
+}
+
 
 export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
   const { user, profile, updateProfile, logout } = useAuth()
@@ -281,6 +332,9 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
             </div>
           )}
         </div>
+
+        {/* ── Prescription requests shortcut ── */}
+        <PrescriptionRequestsBadge onOpen={onOpenRequests}/>
 
         {/* ── Events manager shortcut ── */}
         {onOpenEvents && (
