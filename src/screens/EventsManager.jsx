@@ -153,7 +153,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
         </div>
 
         {/* Search */}
-        <input className="input" placeholder="🔍 Поиск по названию..."
+        <input className="input" placeholder="Поиск по названию..."
           value={search} onChange={e => setSearch(e.target.value)}
           style={{ marginBottom: 10 }} />
 

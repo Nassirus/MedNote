@@ -32,9 +32,9 @@ export const DEMO_ITEMS = [
 ]
 
 export const NAV_ITEMS = [
-  { id:'dashboard', icon:'🏠', label:'Сегодня'   },
-  { id:'calendar',  icon:'📅', label:'Календарь' },
-  { id:'upload',    icon:'🤖', label:'ИИ-анализ' },
-  { id:'notes',     icon:'📝', label:'Заметки'   },
-  { id:'profile',   icon:'⚙️', label:'Профиль'   },
+  { id:'dashboard', iconName:'home',     label:'Сегодня'   },
+  { id:'calendar',  iconName:'calendar', label:'Календарь' },
+  { id:'upload',    iconName:'bot',      label:'ИИ-анализ' },
+  { id:'notes',     iconName:'notes',    label:'Заметки'   },
+  { id:'profile',   iconName:'settings', label:'Профиль'   },
 ]

@@ -1,4 +1,5 @@
 import { NAV_ITEMS } from '../constants'
+import NavIcon from './NavIcon'
 import Logo from './Logo'
 import { useAuth } from '../context/AuthContext'
 
@@ -53,7 +54,7 @@ export default function Layout({ active, onChange, children }) {
                   ? '3px solid var(--primary)'
                   : '3px solid transparent',
               }}>
-                <span style={{ fontSize:19, lineHeight:1, flexShrink:0 }}>{item.icon}</span>
+                <NavIcon name={item.iconName} size={19} color={active===item.id ? 'var(--primary)' : 'var(--text3)' } strokeWidth={active===item.id ? 2.2 : 1.8}/>
                 <span style={{ flex:1 }}>{item.label}</span>
               </button>
             ))}
@@ -120,7 +121,7 @@ export default function Layout({ active, onChange, children }) {
                 transform:'translateX(-50%)', width:32, height:3,
                 borderRadius:'0 0 4px 4px', background:'var(--primary)' }}/>
             )}
-            <span style={{ fontSize:22, lineHeight:1 }}>{item.icon}</span>
+            <NavIcon name={item.iconName} size={22} color={active===item.id ? 'var(--primary)' : 'var(--text3)'} strokeWidth={active===item.id ? 2.2 : 1.8}/>
             <span style={{ fontSize:10, fontWeight: active===item.id ? 700 : 500 }}>
               {item.label}
             </span>

@@ -56,7 +56,7 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
           <div style={{ display:'flex', gap:6, flexShrink:0 }}>
             <button onClick={() => { setEditing(p=>!p); setShowDeleteMenu(false) }} style={{
               background:'var(--surface2)', border:'none', borderRadius:8, padding:'6px 10px', fontSize:13, color:'var(--text2)', fontWeight:600
-            }}>{editing ? 'Отмена' : '✏️'}</button>
+            }}>{editing ? 'Отмена' : <IconPencil size={16}/>}</button>
             <button onClick={onClose} style={{ background:'var(--surface2)', border:'none', borderRadius:'50%', width:30, height:30, fontSize:16, color:'var(--text2)' }}>✕</button>
           </div>
         </div>
@@ -114,9 +114,9 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
             <div style={{ display:'flex', flexDirection:'column', gap:7, marginBottom:14 }}>
               <Row label="⏰ Время" value={item.endTime ? `${item.time} — ${item.endTime}` : item.time} />
               <Row label="🔄 Частота" value={item.freq || '—'} />
-              {item.date && <Row label="📅 Дата" value={format(parseISO(item.date),'d MMMM yyyy',{locale:ru})} />}
-              {item.notes && <Row label="📝 Заметка" value={item.notes} />}
-              {groupCount > 1 && <Row label="📆 Записей в курсе" value={`${groupCount} дней`} />}
+              {item.date && <Row label="Дата" value={format(parseISO(item.date),'d MMMM yyyy',{locale:ru})} />}
+              {item.notes && <Row label="Заметка" value={item.notes} />}
+              {groupCount > 1 && <Row label="Записей в курсе" value={`${groupCount} дней`} />}
             </div>
 
             {/* Status */}
@@ -125,11 +125,11 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
               const [ih2, im2] = (item.time||'00:00').split(':').map(Number)
               const availTime = `${String(ih2).padStart(2,'0')}:${String(Math.max(0,im2-30)).padStart(2,'0')}`
               const configs = {
-                done:      { bg:'var(--success-light)', border:'#A7F3D0', color:'var(--success)',  icon:'✅', text:'Выполнено сегодня' },
-                available: { bg:'var(--warning-light)', border:'#FDE68A', color:'var(--warning)',  icon:'⏳', text:'Ожидает выполнения' },
+                done:      { bg:'var(--success-light)', border:'#A7F3D0', color:'var(--success)',  icon:<IconCheckCircle size={16}/>, text:'Выполнено сегодня' },
+                available: { bg:'var(--warning-light)', border:'#FDE68A', color:'var(--warning)',  icon:<IconClock size={16}/>, text:'Ожидает выполнения' },
                 too_early: { bg:'#EFF6FF',              border:'#BFDBFE', color:'var(--primary)',  icon:'⏰', text:`Доступно с ${availTime} (за 30 мин до)` },
-                past_day:  { bg:'var(--surface2)',      border:'var(--border)', color:'var(--text3)', icon:'🔒', text:'Прошедший день — нельзя отметить' },
-                future:    { bg:'var(--surface2)',      border:'var(--border)', color:'var(--text3)', icon:'📅', text:'Будущее событие — ещё не наступило' },
+                past_day:  { bg:'var(--surface2)',      border:'var(--border)', color:'var(--text3)', icon:<IconLock size={16}/>, text:'Прошедший день — нельзя отметить' },
+                future:    { bg:'var(--surface2)',      border:'var(--border)', color:'var(--text3)', icon:<IconCalendar size={16}/>, text:'Будущее событие — ещё не наступило' },
               }
               const cfg2 = configs[status] || configs.future
               return (
@@ -145,7 +145,7 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
             {/* ── DELETE MENU ── */}
             {showDeleteMenu ? (
               <div style={{ background:'var(--danger-light)', border:'1px solid #FECACA', borderRadius:12, padding:14, marginBottom:10 }}>
-                <div style={{ fontWeight:700, fontSize:13, color:'var(--danger)', marginBottom:12 }}>🗑 Выберите что удалить:</div>
+                <div style={{ fontWeight:700, fontSize:13, color:'var(--danger)', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}><IconTrash size={14}/>Выберите что удалить:</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                   {/* Delete just this day */}
                   <button onClick={() => { onDelete(item.id); onClose() }} style={{
@@ -174,13 +174,13 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
               </div>
             ) : (
               <div style={{ display:'flex', gap:8 }}>
-                <button className="btn btn-danger" onClick={() => setShowDeleteMenu(true)} style={{ flex:1 }}>🗑 Удалить</button>
+                <button className="btn btn-danger" onClick={() => setShowDeleteMenu(true)} style={{ flex:1, display:'flex', alignItems:'center', gap:6, justifyContent:'center' }}><IconTrash size={14}/>Удалить</button>
                 {(() => {
                   const status2 = getToggleStatus(item)
                   if (status2 === 'done') return (
                     <button className="btn" onClick={() => { onToggle(item.id); onClose() }}
                       style={{ flex:3, background:'var(--surface2)', color:'var(--text2)' }}>
-                      ↩ Снять отметку
+                      Снять отметку
                     </button>
                   )
                   if (status2 === 'available') return (
@@ -193,14 +193,14 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
                   const at = `${String(ih3).padStart(2,'0')}:${String(Math.max(0,im3-30)).padStart(2,'0')}`
                   const msgs = {
                     too_early: `⏰ Доступно с ${at}`,
-                    past_day:  '🔒 Прошедший день',
-                    future:    '📅 Ещё не наступило',
+                    past_day:  'Прошедший день',
+                    future:    'Ещё не наступило',
                   }
                   return (
                     <div style={{ flex:3, padding:'10px', background:'var(--surface2)',
                       border:'1px solid var(--border)', borderRadius:9,
                       textAlign:'center', fontSize:13, color:'var(--text3)', fontWeight:500 }}>
-                      {msgs[status2] || '🔒'}
+                      {msgs[status2] || 'Заблокировано'}
                     </div>
                   )
                 })()}

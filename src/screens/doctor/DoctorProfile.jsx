@@ -1,4 +1,5 @@
 import { useAuth } from '../../context/AuthContext'
+import { IconBuilding, IconMail, IconUsers, IconCalendar, IconPill, IconLogOut } from '../../components/Icons'
 import { getRoleLabel } from '../../lib/roles'
 import { generateQRSVG } from '../../lib/qrUtils'
 
@@ -35,8 +36,8 @@ export default function DoctorProfile() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
             {[
-              ['🏥',profile?.clinic_name||'—','Клиника'],
-              ['📧',profile?.email||'—','Email'],
+              ['_building_',profile?.clinic_name||'—','Клиника'],
+              ['_mail_',profile?.email||'—','Email'],
             ].map(([ic,v,l])=>(
               <div key={l} style={{background:'rgba(255,255,255,.1)',
                 borderRadius:10,padding:'10px 12px'}}>

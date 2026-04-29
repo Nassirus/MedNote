@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { IconEye, IconEyeOff } from '../components/Icons'
 import { PARTNER_CLINICS, findClinic } from '../lib/roles'
 import Logo from '../components/Logo'
 
@@ -16,7 +17,7 @@ function PwInput({ id, value, show, onToggle, placeholder, onChange, label, auto
           tabIndex={-1} style={{ position:'absolute', right:10, top:'50%',
             transform:'translateY(-50%)', background:'none', border:'none',
             cursor:'pointer', fontSize:17, color:'var(--text3)', padding:3 }}>
-          {show ? '🙈' : '👁️'}
+          {show ? <IconEyeOff size={17}/> : <IconEye size={17}/>}
         </button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
+import { TypeIcon, IconRefresh, IconCalendar } from '../components/Icons'
 import { minsToTime, timeToMins } from '../lib/dateUtils'
 import {
   format, addDays, startOfMonth, endOfMonth,
@@ -161,7 +162,7 @@ export default function AddItemModal({
                     display:'flex', flexDirection:'column', alignItems:'center', gap:3,
                     transition:'all .15s'
                   }}>
-                    <span style={{ fontSize:20 }}>{v.icon}</span>
+                    <TypeIcon type={k} size={20} color={type===k ? v.color : 'var(--text3)'}/>
                     <span style={{ fontSize:9, fontWeight:700, color: type===k ? v.color : 'var(--text3)', textAlign:'center' }}>{v.label}</span>
                   </button>
                 ))}
@@ -273,7 +274,7 @@ export default function AddItemModal({
 
             {/* Recurring / Custom */}
             <div style={{ display:'flex', background:'var(--surface2)', borderRadius:10, padding:3 }}>
-              {[['daily','🔄 Регулярно'],['custom','📅 Выбрать даты']].map(([k,l]) => (
+              {[['daily','Регулярно'],['custom','Выбрать даты']].map(([k,l]) => (
                 <button key={k} onClick={() => { setRecurring(k); setErr('') }} style={{
                   flex:1, padding:'8px', borderRadius:8, border:'none', fontWeight:600, fontSize:13,
                   background: recurring===k ? 'white' : 'transparent',

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
+import { TypeIcon, IconBell, IconBellOff, IconMail, IconCalendar } from '../components/Icons'
 import { isItemToday, isDoneToday, canToggleItem, getToggleStatus } from '../lib/dateUtils'
 import AddItemModal from '../components/AddItemModal'
 import ItemModal from '../components/ItemModal'
@@ -120,7 +121,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
                 display:'flex', alignItems:'center', gap:6, fontSize:12, fontWeight:700,
                 color:'#92400E',
               }}>
-              📨 Запросы
+              <IconMail size={14}/> Запросы
               <span style={{ background:'var(--danger)', color:'white', borderRadius:'50%',
                 width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center',
                 fontSize:10, fontWeight:800 }}>{pendingRequests}</span>
@@ -163,7 +164,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
         <div className="dash-stats" style={{ display:'none', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:8 }}>
           {[
             ['📋', done+'/'+total, 'Выполнено сегодня', done===total&&total>0?'var(--success)':'var(--primary)'],
-            ['🔥', streak || 0, 'Дней подряд', 'var(--warning)'],
+            ['_flame_', streak || 0, 'Дней подряд', 'var(--warning)'],
             ['📅', (() => {
               const m = {}; items.forEach(i => { m[i.type+'__'+i.title] = true }); return Object.keys(m).length
             })(), 'Курсов активных', 'var(--purple)'],
@@ -183,7 +184,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
         {notifStatus === 'default' && (
           <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10,
             padding:'11px 14px', marginBottom:12, display:'flex', alignItems:'center', gap:10 }}>
-            <span style={{ fontSize:20 }}>🔔</span>
+            <IconBell size={20} color='var(--warning)'/>
             <div style={{ flex:1, fontSize:12, color:'#92400E', lineHeight:1.5 }}>
               <strong>Включите уведомления</strong> — MedNOTE будет напоминать о приёме лекарств
             </div>
@@ -308,8 +309,8 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
                 boxShadow: item.done ? 'none' : 'var(--shadow)'
               }}>
                 <div style={{ width:44, height:44, borderRadius:12, background:ic.light,
-                  display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>
-                  {cfg.icon}
+                  display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <TypeIcon type={item.type} size={22} color={ic.hex}/>
                 </div>
                 <div style={{ flex:1, minWidth:0, cursor:'pointer' }} onClick={() => setSelected(item)}>
                   <div style={{ fontWeight:600, fontSize:14, color:'var(--text)',
@@ -376,7 +377,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
                       border:'2px solid #BFDBFE', background:'#EFF6FF',
                       display:'flex', alignItems:'center', justifyContent:'center',
                       fontSize:12, cursor:'default'
-                    }}>📅</div>
+                    }}><IconCalendar size={20} color='var(--text3)'/></div>
                   )
                 })()}
               </div>

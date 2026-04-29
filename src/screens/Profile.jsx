@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { IconQR, IconClipboard, IconBarChart, IconDna, IconBell, IconUser, IconLogOut, IconBookOpen } from '../components/Icons'
 import { generateQRSVG, getPatientQRData } from '../lib/qrUtils'
 import { useAuth } from '../context/AuthContext'
 // googleCalendar loaded lazily in handlers below
@@ -287,7 +288,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
         <div className="card" style={{ padding:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom: showQR ? 14 : 0 }}>
             <div style={{ flex:1 }}>
-              <div style={{ fontWeight:700, fontSize:14, color:'var(--text)' }}>📱 Мой QR-код</div>
+              <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', display:'flex', alignItems:'center', gap:8 }}><IconQR size={16} color='var(--primary)'/>Мой QR-код</div>
               <div style={{ fontSize:11, color:'var(--text3)', marginTop:2 }}>
                 Покажите врачу чтобы он добавил вас в свой список пациентов
               </div>
@@ -344,7 +345,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
             borderLeft:'4px solid var(--primary)', borderRadius:12,
             cursor:'pointer', boxShadow:'var(--shadow)', textAlign:'left', width:'100%',
           }}>
-            <span style={{ fontSize:22 }}>📋</span>
+            <IconClipboard size={22} color="var(--primary)"/>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700, fontSize:14, color:'var(--primary)' }}>Все события</div>
               <div style={{ fontSize:11, color:'var(--text3)', marginTop:2 }}>Редактирование и удаление событий</div>

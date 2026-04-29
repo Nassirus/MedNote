@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import NavIcon from '../components/NavIcon'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import DoctorPatients from './doctor/DoctorPatients'
 import DoctorCalendar from './doctor/DoctorCalendar'
 import DoctorProfile  from './doctor/DoctorProfile'
 
 const TABS = [
-  { id:'patients', icon:'👥', label:'Пациенты' },
-  { id:'calendar', icon:'📅', label:'Приёмы' },
-  { id:'profile',  icon:'👨‍⚕️', label:'Профиль' },
+  { id:'patients', iconName:'users',    label:'Пациенты' },
+  { id:'calendar', iconName:'calendar', label:'Приёмы'   },
+  { id:'profile',  iconName:'doctor',   label:'Профиль'  },
 ]
 
 export default function DoctorApp() {
@@ -54,7 +55,7 @@ export default function DoctorApp() {
                 color: tab===t.id ? '#93C5FD' : 'rgba(255,255,255,.55)',
                 fontWeight: tab===t.id ? 700 : 400, fontSize:14,
               }}>
-                <span style={{ fontSize:20 }}>{t.icon}</span>
+                <NavIcon name={t.iconName} size={20} color={tab===t.id ? '#1D4ED8' : 'var(--text3)'} strokeWidth={tab===t.id ? 2.2 : 1.8}/>
                 <span style={{ flex:1 }}>{t.label}</span>
                 {tab===t.id && <div style={{ width:6, height:6, borderRadius:'50%', background:'#60A5FA' }}/>}
               </button>
