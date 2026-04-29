@@ -412,19 +412,43 @@ export default function DoctorCalendar() {
           ))}
         </div>
 
-        {/* Month nav */}
+        {/* Nav — month or week depending on view */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
           background:'white', borderRadius:14, padding:'12px 16px',
           border:'1px solid var(--border)' }}>
-          <button onClick={() => setMonth(m => subMonths(m,1))}
+          <button
+            onClick={() => {
+              if (view === 'week') {
+                const prev = addDays(weekStart, -7)
+                setSelected(prev)
+                setMonth(prev)
+              } else {
+                setMonth(m => subMonths(m, 1))
+              }
+            }}
             style={{ background:'none', border:'none', cursor:'pointer',
               fontSize:20, color:'var(--text3)', padding:'0 8px' }}>‹</button>
-          <button onClick={() => { setMonth(new Date()); setSelected(new Date()) }}
+
+          <button
+            onClick={() => { setMonth(new Date()); setSelected(new Date()) }}
             style={{ fontWeight:700, fontSize:15, background:'none', border:'none',
               cursor:'pointer', color:'var(--text)' }}>
-            {format(month, 'LLLL yyyy', { locale:ru })}
+            {view === 'week'
+              ? `${format(weekStart, 'd MMM', { locale:ru })} — ${format(addDays(weekStart,6), 'd MMM yyyy', { locale:ru })}`
+              : format(month, 'LLLL yyyy', { locale:ru })
+            }
           </button>
-          <button onClick={() => setMonth(m => addMonths(m,1))}
+
+          <button
+            onClick={() => {
+              if (view === 'week') {
+                const next = addDays(weekStart, 7)
+                setSelected(next)
+                setMonth(next)
+              } else {
+                setMonth(m => addMonths(m, 1))
+              }
+            }}
             style={{ background:'none', border:'none', cursor:'pointer',
               fontSize:20, color:'var(--text3)', padding:'0 8px' }}>›</button>
         </div>
