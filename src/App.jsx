@@ -25,7 +25,8 @@ function Inner() {
   const [legalDoc, setLegalDoc] = useState(null)
   const [overlay, setOverlay] = useState(null)
 
-  const { items, dbError, add, toggle, remove, removeGroup, removeDates, update } = useSchedule()
+  // useSchedule subscribed lazily — doctors don't need patient schedule items
+  const scheduleData = useSchedule()
 
   if (loading) return (
     <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center',
@@ -54,6 +55,8 @@ function Inner() {
   }
 
   // ── PATIENT ───────────────────────────────────────────────
+  const { items, dbError, add, toggle, remove, removeGroup, removeDates, update } = scheduleData
+
   if (overlay === 'events') return (
     <ErrorBoundary key="events">
       <EventsManager items={items} update={update} remove={remove}
@@ -97,7 +100,8 @@ function Inner() {
       default:
         return <Dashboard items={items} toggle={toggle} add={add} remove={remove}
           update={update} dbError={dbError}
-          onOpenEvents={() => setOverlay('events')}/>
+          onOpenEvents={() => setOverlay('events')}
+          onOpenRequests={() => setOverlay('requests')}/>
     }
   }
 

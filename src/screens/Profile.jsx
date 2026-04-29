@@ -115,7 +115,9 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
   // ── Profile stats ────────────────────────────────────────────────
   const name      = profile?.name || 'Пользователь'
   const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()
-  const doneToday = items.filter(i => i.done).length
+  const todayStr  = (() => { const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0') })()
+  const todayItems = items.filter(i => i.date === todayStr)
+  const doneToday  = todayItems.filter(i => i.done).length
 
   // Weekly adherence — current week Mon-Sun
   const weeklyData = (() => {
@@ -218,7 +220,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginTop:14 }}>
             {[
-              ['Сегодня', doneToday + '/' + items.filter(it => { const t=new Date(); const ds=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; return it.date===ds }).length, 'var(--primary)'],
+              ['Сегодня', doneToday + '/' + todayItems.length, 'var(--primary)'],
               ['Ср. неделя', weekAvg !== null ? weekAvg + '%' : '—', weekAvg === null ? 'var(--text3)' : weekAvg >= 80 ? 'var(--success)' : 'var(--warning)'],
               ['Курсов', String(activeCourses), 'var(--purple)'],
             ].map(([l,v,c]) => (

@@ -208,7 +208,7 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
                 <input className="input" placeholder="UID пациента (из его профиля MedNOTE)"
                   style={{ flex:1, fontSize:12 }}
                   onKeyDown={async e => {
-                    if (e.key === 'Enter' && e.target.value.trim().length >= 20) {
+                    if (e.key === 'Enter' && e.target.value.trim().length >= 24) {
                       await handleQR(e.target.value.trim())
                     }
                   }}
@@ -221,7 +221,7 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
                 />
                 <button onClick={async () => {
                   const v = document.getElementById('uid-input')?.value?.trim()
-                  if (v && v.length >= 20) await handleQR(v)
+                  if (v && v.length >= 24) await handleQR(v)
                 }} style={{
                   padding:'0 14px', borderRadius:10, border:'none',
                   background:'#1D4ED8', color:'white', fontWeight:700, cursor:'pointer', flexShrink:0
@@ -281,7 +281,7 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
 }
 
 // ── Prescription Form ──────────────────────────────────────
-function PrescriptionSheet({ patient, onClose, onSaved }) {
+function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved }) {
   const [mode, setMode] = useState('manual')
   const [file, setFile] = useState(null)
   const [items, setItems] = useState([{
@@ -334,9 +334,9 @@ function PrescriptionSheet({ patient, onClose, onSaved }) {
       await addDoc(collection(db,'prescription_requests'),{
         patient_uid:   patient.patient_uid,
         patient_name:  patient.patient_name,
-        doctor_uid:    patient.doctor_uid||'',
-        doctor_name:   patient.doctor_name||'Врач',
-        clinic_name:   patient.clinic_name||'',
+        doctor_uid:    doctorUid||'',
+        doctor_name:   doctorProfile?.name||'Врач',
+        clinic_name:   doctorProfile?.clinic_name||'',
         items:         requestItems,
         status:        'pending',
         created_at:    serverTimestamp(),
@@ -450,7 +450,7 @@ function PrescriptionSheet({ patient, onClose, onSaved }) {
 }
 
 // ── Patient Detail ─────────────────────────────────────────
-function PatientDetail({ patient, onBack }) {
+function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
   const [items, setItems] = useState([])
   const [showPrescription, setShowPrescription] = useState(false)
   const [msg, setMsg] = useState('')
@@ -476,7 +476,7 @@ function PatientDetail({ patient, onBack }) {
   return (
     <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
       {showPrescription&&(
-        <PrescriptionSheet patient={patient} onClose={()=>setShowPrescription(false)}
+        <PrescriptionSheet patient={patient} doctorUid={doctorUid} doctorProfile={doctorProfile} onClose={()=>setShowPrescription(false)}
           onSaved={n=>{setMsg(`✅ ${n} назначений добавлено`);setShowPrescription(false);setTimeout(()=>setMsg(''),3000)}}/>
       )}
 
@@ -596,7 +596,7 @@ export default function DoctorPatients() {
   )
 
   if (selected) return (
-    <PatientDetail patient={selected} onBack={()=>setSelected(null)}/>
+    <PatientDetail patient={selected} onBack={()=>setSelected(null)} doctorUid={user?.uid} doctorProfile={profile}/>
   )
 
   return (

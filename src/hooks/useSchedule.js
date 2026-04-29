@@ -98,7 +98,7 @@ export function useSchedule() {
       try {
         const gcal = await import('../lib/googleCalendar')
         if (gcal.getStoredToken()) {
-          gcal.addEventToGCal({ ...cleanItem, endTime: end }).catch(() => {})
+          gcal.addEventToGCal({ ...clean, endTime: end }).catch(() => {})
         }
       } catch { /* gcal not available */ }
     } catch (e) { console.error('add error', e) }

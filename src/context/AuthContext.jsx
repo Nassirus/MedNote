@@ -32,17 +32,24 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function fetchProfile(uid, email) {
-    const snap = await getDoc(doc(db, 'profiles', uid))
-    let data = snap.exists() ? { id: uid, ...snap.data() } : null
+    try {
+      const snap = await getDoc(doc(db, 'profiles', uid))
+      let data = snap.exists() ? { id: uid, ...snap.data() } : null
 
-    // Auto-assign admin role
-    if (data && isAdmin(email) && data.role !== 'admin') {
-      await updateDoc(doc(db, 'profiles', uid), { role: 'admin' })
-      data = { ...data, role: 'admin' }
+      // Auto-assign admin role
+      if (data && isAdmin(email) && data.role !== 'admin') {
+        await updateDoc(doc(db, 'profiles', uid), { role: 'admin' })
+        data = { ...data, role: 'admin' }
+      }
+
+      setProfile(data)
+    } catch (e) {
+      console.error('fetchProfile error:', e)
+      // Don't leave the app hanging — set minimal profile and continue
+      setProfile(null)
+    } finally {
+      setLoading(false)
     }
-
-    setProfile(data)
-    setLoading(false)
   }
 
   // Register patient (default role)

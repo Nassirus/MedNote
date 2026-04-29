@@ -55,7 +55,7 @@ export function itemMatchesDay(item, d) {
       return diff % 2 === 0
     }
     case 'Разово': return false
-    default:        return true
+    default:        return false  // unknown/missing freq → don't show
   }
 }
 

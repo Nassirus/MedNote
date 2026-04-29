@@ -323,7 +323,13 @@ export default function Upload({ onAddItems }) {
       if (items.length === 0) throw new Error('Назначения не найдены. Попробуйте сфотографировать чётче или вставьте текст выписки.')
       setPreview(items)
       setStep('preview')
-    } catch(e) { setErr(e.message); setStep('idle') }
+    } catch(e) {
+      const msg = e.message === 'NO_KEY'
+        ? 'VITE_GEMINI_API_KEY не задан. Добавьте ключ в Vercel → Settings → Environment Variables.'
+        : e.message
+      setErr(msg)
+      setStep('idle')
+    }
   }
 
   function updateItem(updated) {

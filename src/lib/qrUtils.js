@@ -11,7 +11,7 @@ export function parseQRData(text) {
   const match = (text || '').match(/mednote:\/\/patient\/([a-zA-Z0-9]+)/)
   if (match) return { type: 'patient', uid: match[1] }
   const plain = (text || '').trim()
-  if (/^[a-zA-Z0-9]{20,30}$/.test(plain)) return { type: 'patient', uid: plain }
+  if (/^[a-zA-Z0-9]{24,30}$/.test(plain)) return { type: 'patient', uid: plain }
   return null
 }
 

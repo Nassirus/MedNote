@@ -3,79 +3,73 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── schedule_items ────────────────────────────────────────────────
-    // Пациент читает/пишет свои события
-    // Врач пишет в события пациента (если есть связь doctor_patients)
+    // Patient reads/writes own items only.
+    // Doctor writes to patient's items via doctor_appointments
+    // (direct doctor→patient item creation happens in DoctorCalendar, verified by patient_uid match)
     match /schedule_items/{itemId} {
-      allow read: if request.auth != null && (
-        resource.data.user_id == request.auth.uid ||
-        exists(/databases/$(database)/documents/doctor_patients/$(
-          request.auth.uid + '_' + resource.data.user_id
-        ))
-      );
+      allow read, update, delete: if request.auth != null &&
+        resource.data.user_id == request.auth.uid;
+
+      // Create: own items OR authenticated user (doctors creating for patients)
       allow create: if request.auth != null && (
         request.resource.data.user_id == request.auth.uid ||
-        exists(/databases/$(database)/documents/doctor_patients/$(
-          request.auth.uid + '_' + request.resource.data.user_id
-        ))
+        request.resource.data.added_by == 'doctor'
       );
-      allow update, delete: if request.auth != null &&
-        resource.data.user_id == request.auth.uid;
     }
 
     // ── profiles ──────────────────────────────────────────────────────
-    // Каждый читает/пишет только свой профиль
-    // Врач может читать профиль пациента (для поиска по email)
+    // Own profile: full access
+    // Any authenticated user: read-only (for doctor to look up patient by UID)
     match /profiles/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-      allow read: if request.auth != null;
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
     }
 
     // ── doctor_patients ───────────────────────────────────────────────
-    // Врач создаёт и читает свои записи
-    // ID документа произвольный (addDoc), фильтр по doctor_uid
+    // Doctor manages their own patient links
     match /doctor_patients/{docId} {
-      allow read, create, delete: if request.auth != null && (
+      allow read, create: if request.auth != null && (
         resource == null ||
         resource.data.doctor_uid == request.auth.uid
       );
-      allow update: if request.auth != null &&
+      allow update, delete: if request.auth != null &&
         resource.data.doctor_uid == request.auth.uid;
     }
 
     // ── doctor_appointments ───────────────────────────────────────────
-    // Врач полностью управляет своими приёмами
+    // Doctor manages their own appointments
     match /doctor_appointments/{docId} {
-      allow read, create, update, delete: if request.auth != null && (
+      allow read, create: if request.auth != null && (
         resource == null ||
         resource.data.doctor_uid == request.auth.uid
       );
+      allow update, delete: if request.auth != null &&
+        resource.data.doctor_uid == request.auth.uid;
+    }
+
+    // ── prescription_requests ─────────────────────────────────────────
+    // Doctor creates, patient accepts/rejects
+    match /prescription_requests/{docId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (
+        resource == null ||
+        resource.data.patient_uid == request.auth.uid ||
+        resource.data.doctor_uid  == request.auth.uid
+      );
+      allow update, delete: if request.auth != null &&
+        resource.data.patient_uid == request.auth.uid;
     }
 
     // ── notes ─────────────────────────────────────────────────────────
+    // Own notes only. Using request.resource on create (resource is null for new docs)
     match /notes/{docId} {
-      allow read, write: if request.auth != null &&
+      allow read, update, delete: if request.auth != null &&
         resource.data.user_id == request.auth.uid;
       allow create: if request.auth != null &&
         request.resource.data.user_id == request.auth.uid;
     }
 
-    // ── prescription_requests ────────────────────────────────────────
-    // Doctor creates request, patient reads/updates/deletes their own
-    match /prescription_requests/{docId} {
-      // Doctor can create
-      allow create: if request.auth != null;
-      // Patient reads their own pending requests
-      allow read: if request.auth != null && (
-        resource == null ||
-        resource.data.patient_uid == request.auth.uid ||
-        resource.data.doctor_uid == request.auth.uid
-      );
-      // Patient can accept (update) or reject (delete) their own requests
-      allow update, delete: if request.auth != null &&
-        resource.data.patient_uid == request.auth.uid;
-    }
-
-    // ── streaks / profiles sub-collections ───────────────────────────
+    // ── streaks ───────────────────────────────────────────────────────
     match /streaks/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
