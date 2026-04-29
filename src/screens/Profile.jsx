@@ -38,7 +38,7 @@ function GoogleLogo({ size = 18 }) {
 }
 
 export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
-  const { profile, updateProfile, logout } = useAuth()
+  const { user, profile, updateProfile, logout } = useAuth()
 
   // ── Notification settings ────────────────────────────────────────
   const [nd, setNd]       = useState(profile?.notify_delay || 30)

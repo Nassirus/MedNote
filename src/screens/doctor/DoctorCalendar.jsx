@@ -486,12 +486,16 @@ export default function DoctorCalendar() {
           </div>
         )}
 
-        {/* ── WEEK VIEW ── */}
+        {/* ── WEEK VIEW — time grid ── */}
         {view === 'week' && (
           <div style={{ background:'white', borderRadius:14, border:'1px solid var(--border)',
             overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-              borderBottom:'1px solid var(--border)' }}>
+
+            {/* Day header row */}
+            <div style={{ display:'grid', gridTemplateColumns:'48px repeat(7,1fr)',
+              borderBottom:'1px solid var(--border)', position:'sticky', top:0,
+              background:'white', zIndex:2 }}>
+              <div style={{ borderRight:'1px solid var(--border)' }}/>
               {weekDays.map((day,i) => {
                 const da  = apptsForDay(day)
                 const sel = isSameDay(day, selected)
@@ -501,22 +505,79 @@ export default function DoctorCalendar() {
                     display:'flex', flexDirection:'column', alignItems:'center',
                     padding:'8px 4px', border:'none', cursor:'pointer',
                     background: sel ? '#EFF6FF' : 'white',
-                    borderBottom: sel ? '2px solid #1D4ED8' : '2px solid transparent',
+                    borderBottom: sel ? '3px solid #1D4ED8' : '3px solid transparent',
+                    borderRight: i < 6 ? '1px solid var(--border)' : 'none',
                   }}>
-                    <span style={{ fontSize:10, color:'var(--text3)',
-                      fontWeight:600 }}>{DOW[i]}</span>
+                    <span style={{ fontSize:10, color:'var(--text3)', fontWeight:600 }}>
+                      {DOW[i]}
+                    </span>
                     <span style={{ fontSize:16, fontWeight: sel||td ? 800 : 400,
-                      color: sel ? '#1D4ED8' : td ? 'var(--success)' : 'var(--text)',
-                      width:30, height:30, borderRadius:'50%',
-                      background: td && !sel ? '#F0FDF4' : 'transparent',
-                      display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      color: sel ? '#1D4ED8' : td ? '#059669' : 'var(--text)',
+                      width:28, height:28, borderRadius:'50%',
+                      background: td ? '#F0FDF4' : 'transparent',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      marginTop:2 }}>
                       {format(day,'d')}
                     </span>
                     {da.length > 0 && (
-                      <div style={{ width:6, height:6, borderRadius:'50%',
-                        background:'#1D4ED8', marginTop:2 }}/>
+                      <div style={{ fontSize:9, fontWeight:700, color:'#1D4ED8', marginTop:2 }}>
+                        {da.length}
+                      </div>
                     )}
                   </button>
+                )
+              })}
+            </div>
+
+            {/* Time grid — 07:00 to 21:00 */}
+            <div style={{ overflowY:'auto', maxHeight:'52vh' }}>
+              {Array.from({ length:15 }, (_, hi) => hi + 7).map(hour => {
+                return (
+                  <div key={hour} style={{ display:'grid',
+                    gridTemplateColumns:'48px repeat(7,1fr)',
+                    borderBottom:'1px solid var(--border)', minHeight:56 }}>
+                    {/* Hour label */}
+                    <div style={{ borderRight:'1px solid var(--border)',
+                      display:'flex', alignItems:'flex-start', justifyContent:'center',
+                      paddingTop:4, fontSize:11, color:'var(--text3)', fontWeight:500,
+                      flexShrink:0 }}>
+                      {String(hour).padStart(2,'0')}:00
+                    </div>
+                    {/* Day columns */}
+                    {weekDays.map((day,di) => {
+                      const ds   = format(day,'yyyy-MM-dd')
+                      const slot = appts.filter(a =>
+                        a.date === ds &&
+                        a.status !== 'cancelled' &&
+                        parseInt((a.time||'00:00').split(':')[0]) === hour
+                      )
+                      return (
+                        <div key={di} onClick={() => { setSelected(day); setShowForm(true) }}
+                          style={{
+                            borderRight: di < 6 ? '1px solid var(--border)' : 'none',
+                            padding:'2px 3px', cursor:'pointer', minHeight:56,
+                            background: isSameDay(day,selected) ? '#F8FBFF' : 'white',
+                          }}>
+                          {slot.map(a => (
+                            <div key={a.id}
+                              onClick={e => { e.stopPropagation(); setEditAppt(a); setShowForm(true) }}
+                              style={{
+                                background: TYPE_COLORS[a.type] || TYPE_COLORS.other,
+                                color:'white', borderRadius:5, padding:'2px 5px',
+                                fontSize:10, fontWeight:600, marginBottom:2,
+                                cursor:'pointer', lineHeight:1.4,
+                                overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                              }}>
+                              {a.time} {a.title}
+                              {a.patient_name && (
+                                <span style={{ opacity:.8 }}> · {a.patient_name.split(' ')[0]}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    })}
+                  </div>
                 )
               })}
             </div>
