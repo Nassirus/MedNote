@@ -88,7 +88,7 @@ function PrescriptionRequestsBadge({ onOpen }) {
 }
 
 
-export default function Profile({ items = [], onOpenReport, onOpenEvents }) {
+export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpenRequests }) {
   const { user, profile, updateProfile, logout } = useAuth()
 
   // ── Notification settings ────────────────────────────────────────
