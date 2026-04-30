@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IcQR, IcClipboard, IcBarChart, IcDna, IcBell, IcUser, IcLogOut, IcBook, IcSettings, IcAlert, IcRepeat, IcLock, IcLoader, IcCheck, IcRefresh, IcMail } from '../components/Icons'
+import { IcQR, IcClipboard, IcBarChart, IcDna, IcBell, IcUser, IcLogOut, IcBook, IcSettings, IcAlert, IcRepeat, IcLock, IcLoader, IcCheck, IcRefresh, IcMail, IcBot } from '../components/Icons'
 import { generateQRSVG, getPatientQRData } from '../lib/qrUtils'
 import { useAuth } from '../context/AuthContext'
 // googleCalendar loaded lazily in handlers below
@@ -89,7 +89,7 @@ function PrescriptionRequestsBadge({ onOpen }) {
 }
 
 
-export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpenRequests }) {
+export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpenRequests, onNavigate }) {
   const { user, profile, updateProfile, logout } = useAuth()
 
   // ── Notification settings ────────────────────────────────────────
@@ -336,6 +336,23 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
 
         {/* ── Prescription requests shortcut ── */}
         <PrescriptionRequestsBadge onOpen={onOpenRequests}/>
+
+        {/* ── AI Analysis shortcut ── */}
+        {onNavigate && (
+          <button onClick={() => onNavigate('upload')} style={{
+            display:'flex', alignItems:'center', gap:12, padding:'14px 16px',
+            background:'white', border:'1px solid var(--primary-border)',
+            borderLeft:'4px solid var(--success)', borderRadius:12,
+            cursor:'pointer', boxShadow:'var(--shadow)', textAlign:'left', width:'100%',
+          }}>
+            <IcBot size={22} color='var(--success)'/>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:700, fontSize:14, color:'var(--success)' }}>ИИ-анализ выписки</div>
+              <div style={{ fontSize:11, color:'var(--text3)', marginTop:2 }}>Загрузите фото или текст назначения</div>
+            </div>
+            <span style={{ color:'var(--text3)', fontSize:18 }}>›</span>
+          </button>
+        )}
 
         {/* ── Events manager shortcut ── */}
         {onOpenEvents && (
