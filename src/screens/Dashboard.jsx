@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
-import { TypeIcon, IcBell, IcBellOff, IcMail, IcCalendar, IcAlert, IcFlame, IcCalendarDays, IcClipboard, IcBarChart, IcCalendarX, IcClock, IcCheckCircle } from '../components/Icons'
+import { TypeIcon, IcBell, IcBellOff, IcMail, IcCalendar, IcAlert, IcFlame, IcCalendarDays, IcClipboard, IcBarChart, IcCalendarX, IcClock, IcCheckCircle, IcLock, IcCheck } from '../components/Icons'
 import { isItemToday, isDoneToday, canToggleItem, getToggleStatus } from '../lib/dateUtils'
 import AddItemModal from '../components/AddItemModal'
 import ItemModal from '../components/ItemModal'

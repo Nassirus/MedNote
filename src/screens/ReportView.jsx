@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { IcCopy, IcPrinter, IcClock, IcCheck } from '../components/Icons'
 import { ru } from 'date-fns/locale'
 import { TYPE_CONFIG } from '../constants'
 

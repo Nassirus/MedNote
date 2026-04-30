@@ -1,3 +1,4 @@
+import { IcClipboard, IcLock, IcPencil } from '../components/Icons'
 export default function Legal({ doc, onBack }) {
   const docs = {
     terms: {

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { TypeIcon, IcSearch, IcTrash, IcX, IcRepeat, IcCalendarDays, IcCalendarX, IcCheck, IcPencil } from '../components/Icons'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
 import { isDoneToday } from '../lib/dateUtils'
 import { format, parseISO } from 'date-fns'

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { IcPill, IcVisit, IcBarChart, IcActivity, IcHeartPulse } from '../components/Icons'
 import { useNotes } from '../hooks/useNotes'
 import { format, parseISO } from 'date-fns'
 import { ru } from 'date-fns/locale'
