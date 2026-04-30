@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { analyzeWithGemini } from '../lib/geminiClient'
-import { TypeIcon, IcClock, IcCalendar, IcRepeat, IcAlert, IcCamera, IcFileText, IcX, IcCheck, IcInfo } from '../components/Icons'
+import { TypeIcon, IcClock, IcCalendar, IcRepeat, IcAlert, IcCamera, IcFileText, IcX, IcCheck, IcInfo, IcBot, IcPaperclip, IcCheckCircle } from '../components/Icons'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
 import {
   format, addDays, startOfMonth, endOfMonth,
