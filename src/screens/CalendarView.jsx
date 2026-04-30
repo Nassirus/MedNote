@@ -6,6 +6,7 @@ import {
 } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
+import { TypeIcon, IcPin, IcInfo, IcLock, IcCalendar, IcCalendarX, IcCheck } from '../components/Icons'
 import { itemMatchesDay, isDoneToday, canToggleItem, timeToMins, minsToTime, itemDuration, layoutItems } from '../lib/dateUtils'
 import AddItemModal from '../components/AddItemModal'
 import ItemModal from '../components/ItemModal'
@@ -237,7 +238,7 @@ export default function CalendarView({ items, add, toggle, remove, removeGroup, 
               })}
             </div>
             <div style={{ marginTop:10, fontSize:11, color:'var(--text3)', textAlign:'center' }}>
-              💡 Двойной клик — добавить событие
+              <IcInfo size={12}/> Двойной клик — добавить событие
             </div>
           </div>
 
@@ -245,16 +246,16 @@ export default function CalendarView({ items, add, toggle, remove, removeGroup, 
           <div style={{ flex:'1 1 240px', minWidth:220 }}>
             <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', marginBottom:12,
               textTransform:'capitalize', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span>{isToday(selected)?'📍 ':''}{format(selected,'d MMMM, EEEE',{locale:ru})}</span>
+              <span>{isToday(selected) ? <IcPin size={14} color='var(--primary)'/> : ''}{format(selected,'d MMMM, EEEE',{locale:ru})}</span>
               {selItems.length>0 && (
                 <span style={{ fontSize:12, fontWeight:600, color:'var(--text3)' }}>
-                  {selItems.filter(i=>isDoneToday(i)).length}/{selItems.length} ✓
+                  {selItems.filter(i=>isDoneToday(i)).length}/{selItems.length} <IcCheck size={12}/>
                 </span>
               )}
             </div>
             {selItems.length === 0 ? (
               <div className="card" style={{ padding:'28px 16px', textAlign:'center' }}>
-                <div style={{ fontSize:36, marginBottom:8 }}>📭</div>
+                <IcCalendarX size={36} color="var(--border2)" style={{marginBottom:8}}/>
                 <div style={{ fontSize:13, color:'var(--text3)', marginBottom:14 }}>Нет событий</div>
                 <button className="btn btn-primary" onClick={() => { setAddConfig({ date:selected }); setShowAdd(true) }}
                   style={{ fontSize:13, padding:'8px 18px' }}>+ Добавить</button>
@@ -329,7 +330,7 @@ export default function CalendarView({ items, add, toggle, remove, removeGroup, 
             borderBottom: '1px solid var(--primary-border)', fontSize: 11,
             color: 'var(--primary)', fontWeight: 500, flexShrink: 0,
           }}>
-            💡 Удержите палец (0.4с) и потяните чтобы выбрать время
+            <IcInfo size={12}/> Удержите палец (0.4с) и потяните чтобы выбрать время
           </div>
 
           {/* Scrollable time grid — THIS is where vertical scroll happens */}
@@ -540,21 +541,21 @@ function DayItem({ item, onOpen, onToggle }) {
           {item.title}
         </div>
         <div style={{ fontSize:11, color:'var(--text3)', marginTop:2 }}>
-          ⏰ {item.time}{item.endTime ? ` — ${item.endTime}` : ''}
+          {item.time}{item.endTime ? ` — ${item.endTime}` : ''}
         </div>
       </div>
       {canToggleItem(item) ? (
         <button className={`check-btn${done?' done':''}`}
           style={{ borderColor: done ? 'var(--success)' : ic.hex, flexShrink:0 }}
           onClick={e => { e.stopPropagation(); onToggle(item.id) }}>
-          {done && <span style={{ color:'white', fontSize:11, fontWeight:700 }}>✓</span>}
+          {done && <span style={{ color:'white', display:'flex', alignItems:'center' }}><IcCheck size={10} sw={3}/></span>}
         </button>
       ) : (
         <div title="День ещё не наступил" style={{
           width:24, height:24, borderRadius:'50%', flexShrink:0,
           border:'2px solid #CBD5E1', background:'#F8FAFC',
           display:'flex', alignItems:'center', justifyContent:'center', fontSize:12
-        }}>🔒</div>
+        }}><IcLock size={11}/></div>
       )}
     </div>
   )

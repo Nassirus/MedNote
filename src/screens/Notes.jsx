@@ -13,11 +13,11 @@ const NOTE_COLORS = [
 ]
 
 const TEMPLATES = [
-  { icon: '💊', label: 'Приём лекарств', title: 'Лог приёма лекарств', content: 'Дата: \nПрепарат: \nДоза: \nВремя приёма: \nСамочувствие после: \n\nЗаметки:' },
-  { icon: '🩺', label: 'Визит к врачу',  title: 'Визит к врачу',       content: 'Дата и время: \nВрач: \nКлиника: \n\nЖалобы:\n- \n\nНазначения:\n- \n\nСледующий визит:' },
-  { icon: '📊', label: 'Давление',       title: 'Дневник давления',    content: 'Дата: \nУтро:  / \nВечер: / \nЧСС: \n\nСамочувствие: ' },
-  { icon: '🏃', label: 'Упражнения',     title: 'Дневник упражнений',  content: 'Дата: \nУпражнения:\n- \n- \n- \n\nДлительность: \nОщущения: ' },
-  { icon: '😊', label: 'Настроение',     title: 'Дневник самочувствия',content: 'Дата: \nНастроение (1-5): \nЭнергия (1-5): \nСон: \nБоль: \n\nЗаметки:' },
+  { Icon: IcPill,      label: 'Приём лекарств', title: 'Лог приёма лекарств', content: 'Дата: \nПрепарат: \nДоза: \nВремя приёма: \nСамочувствие после: \n\nЗаметки:' },
+  { Icon: IcVisit,     label: 'Визит к врачу',  title: 'Визит к врачу',       content: 'Дата и время: \nВрач: \nКлиника: \n\nЖалобы:\n- \n\nНазначения:\n- \n\nСледующий визит:' },
+  { Icon: IcBarChart,  label: 'Давление',       title: 'Дневник давления',    content: 'Дата: \nУтро:  / \nВечер: / \nЧСС: \n\nСамочувствие: ' },
+  { Icon: IcActivity,  label: 'Упражнения',     title: 'Дневник упражнений',  content: 'Дата: \nУпражнения:\n- \n- \n- \n\nДлительность: \nОщущения: ' },
+  { Icon: IcHeartPulse,label: 'Настроение',     title: 'Дневник самочувствия',content: 'Дата: \nНастроение (1-5): \nЭнергия (1-5): \nСон: \nБоль: \n\nЗаметки:' },
 ]
 
 export default function Notes() {
@@ -216,7 +216,7 @@ export default function Notes() {
               }}
                 onMouseEnter={e => e.currentTarget.style.boxShadow='var(--shadow-md)'}
                 onMouseLeave={e => e.currentTarget.style.boxShadow='none'}>
-                <span style={{ fontSize:18 }}>{t.icon}</span>
+                <span style={{ fontSize:18 }}>{t.Icon ? <t.Icon size={18} color='currentColor'/> : null}</span>
                 <span style={{ fontSize:12, fontWeight:600, color:'var(--text2)' }}>{t.label}</span>
               </button>
             ))}
@@ -252,7 +252,7 @@ export default function Notes() {
                 <button className="btn btn-primary" onClick={() => newNote()} style={{ fontSize:13 }}>+ Пустая заметка</button>
                 {TEMPLATES.slice(0,3).map(t => (
                   <button key={t.label} className="btn btn-ghost" onClick={() => newNote(t)} style={{ fontSize:13 }}>
-                    {t.icon} {t.label}
+                    {t.Icon ? <t.Icon size={18} color='currentColor'/> : null} {t.label}
                   </button>
                 ))}
               </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IconQR, IconClipboard, IconBarChart, IconDna, IconBell, IconUser, IconLogOut, IconBookOpen } from '../components/Icons'
+import { IcQR, IcClipboard, IcBarChart, IcDna, IcBell, IcUser, IcLogOut, IcBook, IcSettings, IcAlert, IcRepeat, IcLock, IcLoader, IcCheck, IcRefresh, IcMail } from '../components/Icons'
 import { generateQRSVG, getPatientQRData } from '../lib/qrUtils'
 import { useAuth } from '../context/AuthContext'
 // googleCalendar loaded lazily in handlers below
@@ -70,7 +70,7 @@ function PrescriptionRequestsBadge({ onOpen }) {
       borderLeft:'4px solid #F59E0B', borderRadius:12,
       cursor:'pointer', textAlign:'left', width:'100%',
     }}>
-      <span style={{ fontSize:22 }}>📨</span>
+      <IcMail size={22} color='var(--warning)'/>
       <div style={{ flex:1 }}>
         <div style={{ fontWeight:700, fontSize:14, color:'#92400E' }}>
           Запросы от врача
@@ -250,7 +250,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
       <div className="page-header">
         <h1 style={{ fontWeight:700, fontSize:18 }}>Профиль</h1>
         <button className="btn btn-primary" onClick={saveSettings} style={{ fontSize:13, padding:'8px 16px' }}>
-          {saved ? '✓ Сохранено' : 'Сохранить'}
+          {saved ? <><IcCheck size={14}/> Сохранено</> : 'Сохранить'}
         </button>
       </div>
 
@@ -288,7 +288,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
         <div className="card" style={{ padding:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom: showQR ? 14 : 0 }}>
             <div style={{ flex:1 }}>
-              <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', display:'flex', alignItems:'center', gap:8 }}><IconQR size={16} color='var(--primary)'/>Мой QR-код</div>
+              <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', display:'flex', alignItems:'center', gap:8 }}><IcQR size={16} color='var(--primary)'/>Мой QR-код</div>
               <div style={{ fontSize:11, color:'var(--text3)', marginTop:2 }}>
                 Покажите врачу чтобы он добавил вас в свой список пациентов
               </div>
@@ -323,7 +323,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
                   {user.uid}
                 </div>
                 <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, lineHeight:1.5 }}>
-                  🔒 Этот ID создаётся один раз при регистрации и никогда не меняется.
+                  Этот ID создаётся один раз при регистрации и никогда не меняется.
                   Врач может добавить вас введя этот ID вручную.
                 </div>
               </div>
@@ -345,7 +345,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
             borderLeft:'4px solid var(--primary)', borderRadius:12,
             cursor:'pointer', boxShadow:'var(--shadow)', textAlign:'left', width:'100%',
           }}>
-            <IconClipboard size={22} color="var(--primary)"/>
+            <IcClipboard size={22} color="var(--primary)"/>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700, fontSize:14, color:'var(--primary)' }}>Все события</div>
               <div style={{ fontSize:11, color:'var(--text3)', marginTop:2 }}>Редактирование и удаление событий</div>
@@ -407,14 +407,14 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
             <div>
               <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:9,
                 padding:'10px 12px', marginBottom:10, fontSize:12, color:'#92400E', lineHeight:1.6 }}>
-                ⚙️ Для активации администратор должен добавить <strong>VITE_GOOGLE_CLIENT_ID</strong> в переменные окружения Vercel.
+                Для активации администратор должен добавить <strong>VITE_GOOGLE_CLIENT_ID</strong> в переменные окружения Vercel.
               </div>
               <button
                 onClick={() => setShowGcalSteps(p => !p)}
                 style={{ width:'100%', padding:'9px', borderRadius:9,
                   border:'1px solid var(--border)', background:'var(--surface2)',
                   color:'var(--text2)', fontSize:12, fontWeight:600, cursor:'pointer' }}>
-                {showGcalSteps ? '▲ Скрыть инструкцию для разработчика' : '📖 Инструкция по настройке (для разработчика)'}
+                {showGcalSteps ? '▲ Скрыть инструкцию для разработчика' : 'Инструкция по настройке (для разработчика)'}
               </button>
               {showGcalSteps && (
                 <div style={{ marginTop:10, display:'flex', flexDirection:'column', gap:7 }}>
@@ -459,7 +459,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
                   fontWeight:700, fontSize:13, cursor: gcalLoading ? 'default' : 'pointer',
                   display:'flex', alignItems:'center', justifyContent:'center', gap:8,
                 }}>
-                {gcalLoading ? '⏳ Открываем Google...' : (
+                {gcalLoading ? 'Загрузка...' : (
                   <>
                     <GoogleLogo size={18}/>
                     Войти через Google и подключить
@@ -482,7 +482,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
                   fontWeight:700, fontSize:12,
                   cursor: gcalLoading ? 'default' : 'pointer',
                 }}>
-                {gcalLoading ? '⏳ Синхронизация...' : '🔄 Синхронизировать все'}
+                {gcalLoading ? 'Синхронизация...' : 'Синхронизировать все'}
               </button>
               <button
                 onClick={handleDisconnectGCal}
@@ -498,7 +498,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
         {/* ── Weekly chart ── */}
         <div className="card" style={{ padding:'14px 10px' }}>
           <div style={{ fontWeight:600, fontSize:14, color:'var(--text)', marginBottom:10 }}>
-            📊 Соблюдение за неделю
+            Соблюдение за неделю
           </div>
           <ResponsiveContainer width="100%" height={110}>
             <BarChart data={weeklyData} barSize={18}>
@@ -519,13 +519,13 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
 
         {/* ── Report ── */}
         <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', marginBottom:6 }}>📋 Отчёт для врача</div>
+          <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', marginBottom:6 }}><IcClipboard size={14}/> Отчёт для врача</div>
           <p style={{ fontSize:13, color:'var(--text2)', lineHeight:1.6, marginBottom:14 }}>
             Детальный отчёт о соблюдении назначений для предъявления врачу.
           </p>
           <button className="btn" onClick={onOpenReport}
             style={{ width:'100%', padding:12, background:'var(--success)', color:'white', fontSize:14, fontWeight:700 }}>
-            📋 Сформировать отчёт
+            Сформировать отчёт
           </button>
         </div>
 
@@ -533,7 +533,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
         <div className="card" style={{ padding:'16px 18px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
             <div style={{ width:40, height:40, borderRadius:11, background:'#F0FDF4',
-              display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>🧬</div>
+              display:'flex', alignItems:'center', justifyContent:'center' }}><IcDna size={22} color='#059669'/></div>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700, fontSize:15, color:'var(--text)' }}>Синхронизация с MedIQ</div>
               <div style={{ fontSize:12, color:'var(--text3)' }}>Передача данных в МИС врача</div>
@@ -576,20 +576,20 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
                 </div>
               )}
               <div style={{ background:'var(--surface2)', borderRadius:9, padding:'10px 12px', fontSize:12, color:'var(--text3)' }}>
-                💊 {items.filter(i=>i.type==='medication').length} препаратов ·{' '}
-                🩺 {items.filter(i=>['procedure','exercise'].includes(i.type)).length} процедур ·{' '}
-                ⚠️ {items.filter(i=>i.type==='restriction').length} ограничений
+                {items.filter(i=>i.type==='medication').length} препаратов ·{' '}
+                {items.filter(i=>['procedure','exercise'].includes(i.type)).length} процедур ·{' '}
+                {items.filter(i=>i.type==='restriction').length} ограничений
               </div>
               {syncStatus === 'ok'  && <div style={{ padding:'10px 12px', background:'var(--success-light)', border:'1px solid #A7F3D0', borderRadius:9, fontSize:13, color:'var(--success)' }}>✅ {syncMsg}</div>}
               {syncStatus === 'err' && <div style={{ padding:'10px 12px', background:'var(--danger-light)', border:'1px solid #FECACA', borderRadius:9, fontSize:13, color:'var(--danger)' }}>❌ {syncMsg}</div>}
               <div style={{ display:'flex', gap:8 }}>
                 <button className="btn btn-primary" onClick={sendToMedIQ}
                   disabled={syncStatus==='sending'} style={{ flex:2, padding:11 }}>
-                  {syncStatus === 'sending' ? '⏳ Отправка...' : '🔄 Синхронизировать'}
+                  {syncStatus === 'sending' ? 'Синхронизация...' : 'Синхронизировать'}
                 </button>
                 <button className="btn btn-ghost" onClick={copyPayload}
                   style={{ flex:1, padding:11, fontSize:12 }}>
-                  {copied ? '✓ Скопировано' : '📋 JSON'}
+                  {copied ? <><IcCheck size={13}/> Скопировано</> : 'JSON'}
                 </button>
               </div>
               {profile?.mediq_last_sync && (
@@ -603,7 +603,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
 
         {/* ── Notifications ── */}
         <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', marginBottom:14 }}>🔔 Уведомления</div>
+          <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', marginBottom:14 }}>Уведомления</div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
             paddingBottom:12, borderBottom:'1px solid var(--border)', marginBottom:14 }}>
             <div>
@@ -644,7 +644,7 @@ export default function Profile({ items = [], onOpenReport, onOpenEvents, onOpen
         {/* ── Coming soon ── */}
         <div style={{ background:'var(--surface2)', border:'1px dashed var(--border2)',
           borderRadius:10, padding:'12px 16px', display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:20 }}>👁️</span>
+          <IcUser size={20} color='var(--text3)'/>
           <div style={{ flex:1 }}>
             <div style={{ fontWeight:600, fontSize:13, color:'var(--text)' }}>Мониторинг опекуна</div>
             <div style={{ fontSize:12, color:'var(--text3)' }}>Контроль выполнения назначений для родственников — в разработке</div>

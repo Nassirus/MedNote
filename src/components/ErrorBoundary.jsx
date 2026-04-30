@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { IcAlert } from './Icons'
 
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -20,7 +21,7 @@ export class ErrorBoundary extends Component {
         <div style={{ padding: 24, display: 'flex', flexDirection: 'column',
           alignItems: 'center', gap: 16, minHeight: '100dvh',
           justifyContent: 'center', background: 'var(--bg)' }}>
-          <div style={{ fontSize: 40 }}>⚠️</div>
+          <IcAlert size={40} color="var(--warning)"/>
           <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text)' }}>
             Ошибка загрузки экрана
           </div>

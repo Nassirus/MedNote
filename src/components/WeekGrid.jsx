@@ -1,6 +1,10 @@
+import { IcCheck } from './Icons'
 import { useState } from 'react'
+import { IcCheck } from './Icons'
 import { format, addDays, startOfWeek, isSameDay, isToday, parseISO } from 'date-fns'
+import { IcCheck } from './Icons'
 import { ru } from 'date-fns/locale'
+import { IcCheck } from './Icons'
 import { TYPE_CONFIG } from '../constants'
 
 const HOURS = Array.from({ length: 17 }, (_, i) => i + 7)  // 07:00 – 23:00
@@ -122,7 +126,7 @@ export default function WeekGrid({ items, weekStart, onToggle, onSelect }) {
                             border: `1.5px solid ${item.done ? 'var(--success)' : 'var(--border2)'}`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                           }}>
-                          {item.done && <span style={{ color: 'white', fontSize: 8, fontWeight: 800 }}>✓</span>}
+                          {item.done && <IcCheck size={8} color="white" sw={3}/>}
                         </div>
                       </div>
                     )

@@ -101,7 +101,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
   const ConfirmModal = confirmDelete ? (
     <div className="modal-overlay" onClick={() => setConfirmDelete(null)}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxWidth: 380 }}>
-        <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 12 }}>🗑️</div>
+        <div style={{ display:'flex', justifyContent:'center', marginBottom:12 }}><IcTrash size={32} color="var(--danger)"/></div>
         <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text)', textAlign: 'center', marginBottom: 8 }}>
           {confirmDelete.type === 'group' ? 'Удалить весь курс?' : 'Удалить событие?'}
         </div>
@@ -175,7 +175,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
 
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)' }}>
-            <div style={{ fontSize: 40, marginBottom: 10 }}>📭</div>
+            <IcCalendarX size={40} color="var(--border2)" style={{marginBottom:10}}/>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Ничего не найдено</div>
           </div>
         )}
@@ -210,8 +210,8 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
                     <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, display: 'flex', gap: 8 }}>
                       <span>{cfg.label}</span>
                       {isCourse
-                        ? <span style={{ color: 'var(--purple)', fontWeight: 600 }}>📆 {group.items.length} дн.</span>
-                        : <span style={{ color: 'var(--success)', fontWeight: 600 }}>🔄 Регулярно</span>}
+                        ? <span style={{ color: 'var(--purple)', fontWeight: 600 }}><IcCalendarDays size={12}/> {group.items.length} дн.</span>
+                        : <span style={{ color: 'var(--success)', fontWeight: 600 }}><IcRepeat size={12}/> Регулярно</span>}
                     </div>
                   </div>
                   {/* Delete whole group */}
@@ -222,7 +222,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
                     }}
                     style={{ background: 'var(--danger-light)', border: 'none', borderRadius: 7,
                       width: 30, height: 30, color: 'var(--danger)', fontSize: 14, cursor: 'pointer', flexShrink: 0 }}>
-                    🗑
+                    <IcTrash size={14}/>
                   </button>
                   <div style={{ color: 'var(--text3)', fontSize: 14, flexShrink: 0 }}>
                     {isOpen ? '▲' : '▼'}
@@ -244,7 +244,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
                         </span>
                         <button onClick={() => { removeDates(group.title, group.type, [...selDates]); setSelDates(new Set()) }}
                           className="btn btn-danger" style={{ fontSize: 11, padding: '5px 10px' }}>
-                          🗑 Удалить выбранные
+                          <IcTrash size={14}/> Удалить выбранные
                         </button>
                         <button onClick={() => setSelDates(new Set())}
                           style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer' }}>✕</button>
@@ -279,7 +279,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
                               background: isSel ? 'var(--danger)' : 'white',
                               display: 'flex', alignItems: 'center', justifyContent: 'center'
                             }}>
-                              {isSel && <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>✓</span>}
+                              {isSel && <IcCheck size={9} color='white' sw={3}/>}
                             </button>
                           ) : (
                             <div style={{ width: 18, flexShrink: 0 }} />
@@ -296,7 +296,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
                             <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1, display: 'flex', gap: 8 }}>
                               <span>⏰ {item.time}{item.endTime ? '–' + item.endTime : ''}</span>
                               {item.notes && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{item.notes}</span>}
-                              {done && <span style={{ color: 'var(--success)', fontWeight: 700 }}>✓</span>}
+                              {done && <IcCheck size={13} color='var(--success)' sw={2.5}/>}
                             </div>
                           </div>
 
@@ -310,7 +310,7 @@ export default function EventsManager({ items, update, remove, removeGroup, remo
                           <button onClick={() => setConfirmDelete({ type: 'single', id: item.id, title: item.title })} style={{
                             background: 'var(--danger-light)', border: 'none', borderRadius: 6,
                             width: 28, height: 28, color: 'var(--danger)', fontSize: 13, cursor: 'pointer', flexShrink: 0
-                          }}>🗑</button>
+                          }}><IcTrash size={14}/></button>
                         </div>
                       )
                     })}

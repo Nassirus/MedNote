@@ -1,3 +1,4 @@
+import { TypeIcon, IcCheck, IcX, IcClock, IcAlert, IcCalendar, IcSend, IcPencil, IcCheckCircle } from '../components/Icons'
 /**
  * PrescriptionRequests.jsx
  * Patient screen: review, edit and accept/reject doctor prescription requests
@@ -12,20 +13,11 @@ import { db } from '../lib/firebase'
 import { format, addDays } from 'date-fns'
 import { ru } from 'date-fns/locale'
 
-const TYPE_ICONS = {
-  medication:  '💊',
-  exercise:    '🏃',
-  procedure:   '🩺',
-  appointment: '📅',
-  restriction: '⚠️',
-  nutrition:   '🥗',
-  routine:     '📋',
-}
 
 // Single editable prescription item card
 function RequestItemCard({ item, onChange }) {
   const [expanded, setExpanded] = useState(false)
-  const icon = TYPE_ICONS[item.type] || '📋'
+  
 
   return (
     <div style={{
@@ -53,7 +45,7 @@ function RequestItemCard({ item, onChange }) {
           </div>
         </div>
         <span style={{ color: 'var(--text3)', fontSize: 14, flexShrink: 0 }}>
-          {expanded ? '▲' : '✏️'}
+          {expanded ? '▲' : <IcPencil size={14}/>}
         </span>
       </button>
 
@@ -73,7 +65,7 @@ function RequestItemCard({ item, onChange }) {
               <label className="label">Дата начала</label>
               {item.start_date && item.start_date !== format(new Date(), 'yyyy-MM-dd') && (
                 <span style={{ fontSize:10, color:'#1D4ED8', fontWeight:600 }}>
-                  📅 Назначено врачом
+                  Назначено врачом
                 </span>
               )}
             </div>
@@ -122,7 +114,7 @@ function RequestItemCard({ item, onChange }) {
           {item.notes && (
             <div style={{ background: 'var(--surface2)', borderRadius: 9,
               padding: '9px 12px', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
-              📋 Заметка врача: {item.notes}
+              Заметка врача: {item.notes}
             </div>
           )}
         </div>
@@ -183,7 +175,7 @@ function RequestCard({ request, onAccept, onReject }) {
       <div style={{ background: '#EFF6FF', borderRadius: 10, padding: '10px 12px',
         fontSize: 12, color: '#1E40AF', lineHeight: 1.6, marginBottom: 12,
         border: '1px solid #BFDBFE' }}>
-        💡 Вы можете изменить время и дату каждого назначения — нажмите ✏️ на карточке.
+        Вы можете изменить время и дату каждого назначения — нажмите на карточку.
         После принятия события появятся в вашем календаре.
       </div>
 
@@ -213,7 +205,7 @@ function RequestCard({ request, onAccept, onReject }) {
           color: loading ? 'var(--text3)' : 'white',
           fontWeight: 800, fontSize: 14, cursor: loading ? 'default' : 'pointer',
         }}>
-          {loading ? '⏳ Добавляю...' : '✅ Принять и добавить в календарь'}
+          {loading ? 'Добавляю...' : 'Принять и добавить в календарь'}
         </button>
       </div>
     </div>
@@ -282,7 +274,7 @@ export default function PrescriptionRequests({ onBack }) {
 
       await batch.commit()
 
-      setDoneMsg(`✅ ${editedItems.length} назначений добавлено в календарь!`)
+      setDoneMsg(`${editedItems.length} назначений добавлено в календарь!`)
       setTimeout(() => setDoneMsg(''), 4000)
     } catch (e) {
       console.error('Accept error:', e)
@@ -321,9 +313,9 @@ export default function PrescriptionRequests({ onBack }) {
         {doneMsg && (
           <div style={{ padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600,
             marginBottom: 12,
-            background: doneMsg.startsWith('✅') ? 'var(--success-light)' : 'var(--surface2)',
-            border: `1px solid ${doneMsg.startsWith('✅') ? '#A7F3D0' : 'var(--border)'}`,
-            color: doneMsg.startsWith('✅') ? 'var(--success)' : 'var(--text2)',
+            background: doneMsg.startsWith('Добавлено') || doneMsg.includes('назначений') ? 'var(--success-light)' : 'var(--surface2)',
+            border: `1px solid ${doneMsg.startsWith('Добавлено') || doneMsg.includes('назначений') ? '#A7F3D0' : 'var(--border)'}`,
+            color: doneMsg.startsWith('Добавлено') || doneMsg.includes('назначений') ? 'var(--success)' : 'var(--text2)',
           }}>
             {doneMsg}
           </div>
@@ -335,7 +327,7 @@ export default function PrescriptionRequests({ onBack }) {
           </div>
         ) : requests.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text3)' }}>
-            <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
+            <IcCheckCircle size={52} color="var(--success)" style={{marginBottom:16}}/>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
               Нет новых запросов
             </div>

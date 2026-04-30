@@ -1,5 +1,5 @@
 import { useAuth } from '../../context/AuthContext'
-import { IconBuilding, IconMail, IconUsers, IconCalendar, IconPill, IconLogOut } from '../../components/Icons'
+import { IcBuilding, IcMail, IcUsers, IcCalendar, IcPill, IcLogOut } from '../../components/Icons'
 import { getRoleLabel } from '../../lib/roles'
 import { generateQRSVG } from '../../lib/qrUtils'
 
@@ -36,8 +36,8 @@ export default function DoctorProfile() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
             {[
-              ['_building_',profile?.clinic_name||'—','Клиника'],
-              ['_mail_',profile?.email||'—','Email'],
+              [<IcBuilding size={14}/>,profile?.clinic_name||'—','Клиника'],
+              [<IcMail size={14}/>,profile?.email||'—','Email'],
             ].map(([ic,v,l])=>(
               <div key={l} style={{background:'rgba(255,255,255,.1)',
                 borderRadius:10,padding:'10px 12px'}}>
@@ -53,7 +53,7 @@ export default function DoctorProfile() {
         {/* Clinic ID */}
         <div style={{background:'white',borderRadius:14,padding:'14px 16px',
           border:'1px solid var(--border)'}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:6}}>🏥 Партнёрская клиника</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:6}}><IcBuilding size={16} color='var(--primary)'/> Партнёрская клиника</div>
           <div style={{fontSize:13,color:'var(--text2)',marginBottom:4}}>{profile?.clinic_name}</div>
           <div style={{fontSize:11,color:'var(--text3)',background:'var(--surface2)',
             padding:'6px 10px',borderRadius:8,fontFamily:'monospace'}}>
@@ -66,9 +66,9 @@ export default function DoctorProfile() {
           padding:'14px 16px',border:'1px solid var(--border)'}}>
           <div style={{fontWeight:700,fontSize:14,marginBottom:10}}>ℹ️ О враче кабинете MedNOTE</div>
           {[
-            ['👥','Пациенты','Добавляйте пациентов по QR-коду или вручную. Пациенты с аккаунтом MedNOTE получат назначения в своё расписание автоматически.'],
-            ['📅','Расписание','Ведите календарь приёмов. Приёмы появляются у пациентов с аккаунтом MedNOTE.'],
-            ['💊','Назначения','Добавляйте назначения вручную или через ИИ-анализ фото выписки.'],
+            [<IcUsers size={20} color='var(--primary)'/>, 'Пациенты','Добавляйте пациентов по QR-коду или вручную. Пациенты с аккаунтом MedNOTE получат назначения в своё расписание автоматически.'],
+            [<IcCalendar size={20} color='var(--primary)'/>, 'Расписание','Ведите календарь приёмов. Приёмы появляются у пациентов с аккаунтом MedNOTE.'],
+            [<IcPill size={20} color='var(--primary)'/>, 'Назначения','Добавляйте назначения вручную или через ИИ-анализ фото выписки.'],
           ].map(([ic,title,desc])=>(
             <div key={title} style={{display:'flex',gap:12,marginBottom:12,alignItems:'flex-start'}}>
               <span style={{fontSize:20,flexShrink:0}}>{ic}</span>

@@ -81,7 +81,7 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
                   <input type="time" className="input" value={form.endTime} onChange={e=>onEndChange(e.target.value)} />
                 </div>
               </div>
-              {durationM > 0 && <div style={{ fontSize:11, color:'var(--primary)', fontWeight:600, marginTop:4, textAlign:'center' }}>⏱ {durLabel}</div>}
+              {durationM > 0 && <div style={{ fontSize:11, color:'var(--primary)', display:'flex', alignItems:'center', gap:3, fontWeight:600, marginTop:4, textAlign:'center' }}>⏱ {durLabel}</div>}
             </div>
             <div>
               <label className="label">Частота</label>
@@ -106,14 +106,14 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
               <textarea className="input" value={form.notes} rows={2} style={{ resize:'none' }}
                 onChange={e=>setForm(p=>({...p,notes:e.target.value}))} />
             </div>
-            <button className="btn btn-primary" onClick={save} style={{ width:'100%', padding:12 }}>✓ Сохранить</button>
+            <button className="btn btn-primary" onClick={save} style={{ width:'100%', padding:12 }}>Сохранить</button>
           </div>
         ) : (
           <>
             {/* Details */}
             <div style={{ display:'flex', flexDirection:'column', gap:7, marginBottom:14 }}>
-              <Row label="⏰ Время" value={item.endTime ? `${item.time} — ${item.endTime}` : item.time} />
-              <Row label="🔄 Частота" value={item.freq || '—'} />
+              <Row label="Время" value={item.endTime ? `${item.time} — ${item.endTime}` : item.time} />
+              <Row label="Частота" value={item.freq || '—'} />
               {item.date && <Row label="Дата" value={format(parseISO(item.date),'d MMMM yyyy',{locale:ru})} />}
               {item.notes && <Row label="Заметка" value={item.notes} />}
               {groupCount > 1 && <Row label="Записей в курсе" value={`${groupCount} дней`} />}
@@ -127,7 +127,7 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
               const configs = {
                 done:      { bg:'var(--success-light)', border:'#A7F3D0', color:'var(--success)',  icon:<IconCheckCircle size={16}/>, text:'Выполнено сегодня' },
                 available: { bg:'var(--warning-light)', border:'#FDE68A', color:'var(--warning)',  icon:<IconClock size={16}/>, text:'Ожидает выполнения' },
-                too_early: { bg:'#EFF6FF',              border:'#BFDBFE', color:'var(--primary)',  icon:'⏰', text:`Доступно с ${availTime} (за 30 мин до)` },
+                too_early: { bg:'#EFF6FF',              border:'#BFDBFE', color:'var(--primary)',  icon:<IcClock size={16}/>, text:`Доступно с ${availTime} (за 30 мин до)` },
                 past_day:  { bg:'var(--surface2)',      border:'var(--border)', color:'var(--text3)', icon:<IconLock size={16}/>, text:'Прошедший день — нельзя отметить' },
                 future:    { bg:'var(--surface2)',      border:'var(--border)', color:'var(--text3)', icon:<IconCalendar size={16}/>, text:'Будущее событие — ещё не наступило' },
               }
@@ -192,7 +192,7 @@ export default function ItemModal({ item, onClose, onDelete, onDeleteGroup, onDe
                   const [ih3, im3] = (item.time||'00:00').split(':').map(Number)
                   const at = `${String(ih3).padStart(2,'0')}:${String(Math.max(0,im3-30)).padStart(2,'0')}`
                   const msgs = {
-                    too_early: `⏰ Доступно с ${at}`,
+                    too_early: `Доступно с ${at}`,
                     past_day:  'Прошедший день',
                     future:    'Ещё не наступило',
                   }

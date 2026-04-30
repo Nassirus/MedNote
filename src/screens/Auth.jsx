@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { IconEye, IconEyeOff } from '../components/Icons'
+import { IcEye, IcEyeOff, IcSettings, IcCheck, IcX, IcLock, IcClipboard, IcPencil, IcAlert } from '../components/Icons'
 import { PARTNER_CLINICS, findClinic } from '../lib/roles'
 import Logo from '../components/Logo'
 
@@ -17,7 +17,7 @@ function PwInput({ id, value, show, onToggle, placeholder, onChange, label, auto
           tabIndex={-1} style={{ position:'absolute', right:10, top:'50%',
             transform:'translateY(-50%)', background:'none', border:'none',
             cursor:'pointer', fontSize:17, color:'var(--text3)', padding:3 }}>
-          {show ? <IconEyeOff size={17}/> : <IconEye size={17}/>}
+          {show ? <IcEyeOff size={17}/> : <IcEye size={17}/>}
         </button>
       </div>
     </div>
@@ -25,8 +25,8 @@ function PwInput({ id, value, show, onToggle, placeholder, onChange, label, auto
 }
 
 const ERROR_MAP = {
-  'auth/configuration-not-found': '⚙️ Firebase не настроен. Добавьте VITE_FIREBASE_* в Vercel → Environment Variables.',
-  'auth/invalid-api-key':         '⚙️ Неверный VITE_FIREBASE_API_KEY.',
+  'auth/configuration-not-found': 'Firebase не настроен. Добавьте VITE_FIREBASE_* в Vercel → Environment Variables.',
+  'auth/invalid-api-key':         'Неверный VITE_FIREBASE_API_KEY.',
   'auth/user-not-found':          'Пользователь с таким email не найден.',
   'auth/wrong-password':          'Неверный пароль.',
   'auth/invalid-credential':      'Неверный email или пароль.',
@@ -35,7 +35,7 @@ const ERROR_MAP = {
   'auth/invalid-email':           'Некорректный формат email.',
   'auth/too-many-requests':       'Слишком много попыток. Подождите несколько минут.',
   'auth/network-request-failed':  'Ошибка сети. Проверьте подключение к интернету.',
-  'auth/operation-not-allowed':   '⚙️ Вход по email не включён в Firebase Console.',
+  'auth/operation-not-allowed':   'Вход по email не включён в Firebase Console.',
 }
 function friendlyError(code) {
   for (const [k, v] of Object.entries(ERROR_MAP)) {
@@ -125,7 +125,7 @@ export default function Auth({ onOpenLegal }) {
         {/* Mode tabs */}
         <div style={{ display:'flex', background:'var(--surface2)', borderRadius:10,
           padding:4, marginBottom:20, gap:2 }}>
-          {[['login','Войти'],['register','Пациент'],['doctor','👨‍⚕️ Врач']].map(([m,l]) => (
+          {[['login','Войти'],['register','Пациент'],['doctor','Врач']].map(([m,l]) => (
             <button key={m} onClick={() => switchMode(m)} style={{
               flex:1, padding:'8px 4px', borderRadius:7, border:'none', fontWeight:600, fontSize:13,
               background: mode===m ? 'white' : 'transparent',
@@ -139,7 +139,7 @@ export default function Auth({ onOpenLegal }) {
         {mode === 'doctor' && (
           <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:10,
             padding:'10px 14px', marginBottom:16, fontSize:12, color:'#1E40AF' }}>
-            👨‍⚕️ Регистрация врача. Введите ID партнёрской клиники — он выдаётся администратором MedNOTE.
+            Регистрация врача. Введите ID партнёрской клиники — он выдаётся администратором MedNOTE.
           </div>
         )}
 
@@ -176,12 +176,12 @@ export default function Auth({ onOpenLegal }) {
                 {clinicFound && (
                   <div style={{ fontSize:12, fontWeight:600, color:'var(--success)',
                     marginTop:5, display:'flex', alignItems:'center', gap:6 }}>
-                    ✅ {clinicFound.name}
+                    {clinicFound.name}
                   </div>
                 )}
                 {partnerId && !clinicFound && (
                   <div style={{ fontSize:11, color:'var(--danger)', marginTop:4 }}>
-                    ✗ Клиника не найдена
+                    Клиника не найдена
                   </div>
                 )}
                 <div style={{ fontSize:10, color:'var(--text3)', marginTop:5, lineHeight:1.6 }}>
@@ -219,7 +219,7 @@ export default function Auth({ onOpenLegal }) {
               {confirm && (
                 <div style={{ fontSize:12, fontWeight:600, marginTop:-8,
                   color: pwMatch ? 'var(--success)' : 'var(--danger)' }}>
-                  {pwMatch ? '✓ Пароли совпадают' : '✗ Пароли не совпадают'}
+                  {pwMatch ? 'Пароли совпадают' : 'Пароли не совпадают'}
                 </div>
               )}
 
@@ -264,7 +264,7 @@ export default function Auth({ onOpenLegal }) {
                 <div style={{ padding:'8px 10px', background:'var(--warning-light)',
                   borderRadius:8, border:'1px solid #FDE68A' }}>
                   <p style={{ fontSize:11, color:'#92400E', lineHeight:1.5 }}>
-                    ⚠️ <strong>Важно:</strong> MedNOTE — вспомогательный инструмент.
+                    <IcAlert size={13}/> <strong>Важно:</strong> MedNOTE — вспомогательный инструмент.
                     Все медицинские решения принимает только врач.
                   </p>
                 </div>
@@ -286,7 +286,7 @@ export default function Auth({ onOpenLegal }) {
             disabled={loading || (mode !== 'login' && !allAgreed)}>
             {loading ? '⏳ Загрузка...'
               : mode === 'login' ? 'Войти →'
-              : mode === 'doctor' ? '👨‍⚕️ Создать аккаунт врача →'
+              : mode === 'doctor' ? 'Создать аккаунт врача →'
               : 'Создать аккаунт →'}
           </button>
         </form>
@@ -294,7 +294,7 @@ export default function Auth({ onOpenLegal }) {
         {/* Footer links */}
         <div style={{ marginTop:16, paddingTop:14, borderTop:'1px solid var(--border)',
           display:'flex', justifyContent:'center', gap:14, flexWrap:'wrap' }}>
-          {[['terms','📋 Условия'],['privacy','🔒 Конфиденциальность'],['dataprocessing','✍️ Данные']].map(([d,l]) => (
+          {[['terms','Условия'],['privacy','Конфиденциальность'],['dataprocessing','✍️ Данные']].map(([d,l]) => (
             <button key={d} onClick={() => onOpenLegal(d)}
               style={{ background:'none', border:'none', fontSize:11,
                 color:'var(--text3)', textDecoration:'underline', cursor:'pointer' }}>
@@ -303,7 +303,7 @@ export default function Auth({ onOpenLegal }) {
           ))}
         </div>
         <p style={{ textAlign:'center', fontSize:11, color:'var(--text3)', marginTop:10 }}>
-          🔒 Firebase Auth · 🇰🇿 Закон РК № 94-V · 🤖 Gemini AI
+          Firebase Auth · 🇰🇿 Закон РК № 94-V · Gemini AI
         </p>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { TypeIcon, IcTrash, IcCheck, IcPencil, IcSave, IcLoader, IcCalendarX, IcX, IcPlus } from '../../components/Icons'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -22,11 +23,11 @@ const TYPE_COLORS = {
   other:       '#64748B',
 }
 const TYPE_LABELS = {
-  appointment:'📅 Приём',
-  procedure: '🩺 Процедура',
-  medication:'💊 Лекарство',
-  exercise:  '🏃 ЛФК',
-  other:     '📋 Другое',
+  appointment:'Приём',
+  procedure: 'Процедура',
+  medication: 'Лекарство',
+  exercise: 'ЛФК',
+  other: 'Другое',
 }
 
 // ── Appointment form (modal bottom sheet) ─────────────────
@@ -176,14 +177,14 @@ function AppointmentForm({ date, appt, doctorUid, patients, onClose, onSaved }) 
           </div>
 
           {err && <div style={{ padding:'9px 12px', borderRadius:9, fontSize:12,
-            background:'var(--danger-light)', color:'var(--danger)' }}>❌ {err}</div>}
+            background:'var(--danger-light)', color:'var(--danger)' }}><IcX size={12} color='var(--danger)'/> {err}</div>}
 
           <div style={{ display:'flex', gap:10 }}>
             {editing && (
               <button onClick={remove} style={{ flex:1, padding:'12px', borderRadius:12,
                 border:'none', background:'var(--danger-light)', color:'var(--danger)',
                 fontWeight:700, fontSize:13, cursor:'pointer' }}>
-                🗑️ Удалить
+                <IcTrash size={14}/> Удалить
               </button>
             )}
             <button onClick={save} disabled={loading} style={{
@@ -192,7 +193,7 @@ function AppointmentForm({ date, appt, doctorUid, patients, onClose, onSaved }) 
               color: loading ? 'var(--text3)' : 'white',
               fontWeight:800, fontSize:14, cursor: loading ? 'default' : 'pointer',
             }}>
-              {loading ? '⏳ Сохранение...' : editing ? '💾 Сохранить' : '+ Добавить приём'}
+              {loading ? 'Сохранение...' : editing ? 'Сохранить' : '+ Добавить приём'}
             </button>
           </div>
         </div>
@@ -224,7 +225,7 @@ function ApptCard({ appt, onEdit, onDone, onCancel }) {
           </div>
           {appt.patient_name && (
             <div style={{ fontSize:12, color:'var(--text3)', marginTop:2, display:'flex', gap:6 }}>
-              <span>👤 {appt.patient_name}</span>
+              <span>{appt.patient_name}</span>
               {appt.patient_has_account && (
                 <span style={{ color:'var(--success)', fontWeight:600, fontSize:10 }}>● MedNOTE</span>
               )}
@@ -251,23 +252,23 @@ function ApptCard({ appt, onEdit, onDone, onCancel }) {
           <button onClick={() => onEdit(appt)} style={{
             padding:'7px 12px', borderRadius:9, border:'1px solid var(--border)',
             background:'white', color:'var(--text2)', fontSize:12, fontWeight:600, cursor:'pointer'
-          }}>✏️ Изменить</button>
+          }}><IcPencil size={14}/> Изменить</button>
           <button onClick={() => onDone(appt)} style={{
             flex:1, padding:'7px', borderRadius:9, border:'none',
             background:'var(--success-light)', color:'var(--success)',
             fontSize:12, fontWeight:700, cursor:'pointer'
-          }}>✅ Выполнен</button>
+          }}><IcCheck size={14}/> Выполнен</button>
           <button onClick={() => onCancel(appt)} style={{
             padding:'7px 12px', borderRadius:9, border:'none',
             background:'var(--danger-light)', color:'var(--danger)',
             fontSize:12, fontWeight:700, cursor:'pointer'
-          }}>❌</button>
+          }}><IcX size={14}/></button>
         </div>
       )}
 
       {isDone && (
         <div style={{ fontSize:12, color:'var(--success)', fontWeight:600, marginTop:6 }}>
-          ✅ Выполнен
+          <IcCheck size={14} color='var(--success)'/> Выполнен
         </div>
       )}
     </div>
@@ -306,7 +307,7 @@ export default function DoctorCalendar() {
 
   async function markDone(appt) {
     await updateDoc(doc(db, 'doctor_appointments', appt.id), { status:'done' })
-    flash('✅ Приём отмечен выполненным')
+    flash('Приём отмечен выполненным')
   }
 
   async function markCancelled(appt) {
@@ -356,7 +357,7 @@ export default function DoctorCalendar() {
           onClose={() => { setShowForm(false); setEditAppt(null) }}
           onSaved={() => {
             setShowForm(false); setEditAppt(null)
-            flash(editAppt ? '✅ Приём обновлён' : '✅ Приём добавлен')
+            flash(editAppt ? 'Приём обновлён' : 'Приём добавлен')
           }}
         />
       )}
@@ -390,9 +391,9 @@ export default function DoctorCalendar() {
         {/* Flash message */}
         {msg && (
           <div style={{ padding:'10px 14px', borderRadius:10, fontSize:13, fontWeight:600,
-            background: msg.startsWith('✅') ? 'var(--success-light)' : 'var(--surface2)',
-            border:`1px solid ${msg.startsWith('✅') ? '#A7F3D0' : 'var(--border)'}`,
-            color: msg.startsWith('✅') ? 'var(--success)' : 'var(--text2)' }}>
+            background: msg.includes('добавлен') || msg.includes('обновлён') || msg.includes('отмечен') ? 'var(--success-light)' : 'var(--surface2)',
+            border:`1px solid ${msg.includes('добавлен') || msg.includes('обновлён') || msg.includes('отмечен') ? '#A7F3D0' : 'var(--border)'}`,
+            color: msg.includes('добавлен') || msg.includes('обновлён') || msg.includes('отмечен') ? 'var(--success)' : 'var(--text2)' }}>
             {msg}
           </div>
         )}
@@ -617,7 +618,7 @@ export default function DoctorCalendar() {
 
         {dayAppts.length === 0 ? (
           <div style={{ textAlign:'center', padding:'30px 20px', color:'var(--text3)' }}>
-            <div style={{ fontSize:36, marginBottom:10 }}>📅</div>
+            <IcCalendarX size={36} color="var(--border2)" style={{marginBottom:10}}/>
             <div style={{ fontSize:13 }}>На этот день приёмов нет</div>
             <button onClick={() => { setShowForm(true); setEditAppt(null) }}
               style={{ marginTop:12, background:'none', border:'none',

@@ -1,3 +1,4 @@
+import { TypeIcon, IcQR, IcCamera, IcPencil, IcX, IcTrash, IcCheck, IcUsers, IcLoader, IcPlus, IcSend, IcAlert, IcBarChart, IcClipboard, IcCalendar, IcCheckCircle, IcDoctor } from '../../components/Icons'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -174,7 +175,7 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
 
           {/* Mode tabs */}
           <div style={{ display:'flex', gap:6, marginBottom:18 }}>
-            {[['qr','📷 По QR-коду'],['manual','✏️ Без аккаунта']].map(([m,l])=>(
+            {[['qr','По QR-коду'],['manual','Без аккаунта']].map(([m,l])=>(
               <button key={m} onClick={()=>setMode(m)} style={{
                 flex:1, padding:'10px', borderRadius:12, cursor:'pointer',
                 border:`2px solid ${mode===m?'#1D4ED8':'var(--border)'}`,
@@ -189,7 +190,7 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <div style={{ background:'#EFF6FF', borderRadius:12, padding:'14px',
                 fontSize:13, color:'#1E40AF', lineHeight:1.6 }}>
-                📱 Попросите пациента открыть MedNOTE → Профиль → показать QR-код.
+                Попросите пациента открыть MedNOTE → Профиль → показать QR-код.
                 Или введите UID пациента вручную.
               </div>
               <button onClick={()=>setShowScanner(true)} disabled={loading} style={{
@@ -197,7 +198,7 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
                 background:'linear-gradient(135deg,#1D4ED8,#2563EB)',
                 color:'white', fontWeight:800, fontSize:15, cursor:'pointer'
               }}>
-                {loading ? '⏳ Загрузка...' : '📷 Сканировать QR'}
+                {loading ? 'Загрузка...' : <><IcCamera size={18}/> Сканировать QR</>}
               </button>
               <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                 <div style={{ flex:1, height:1, background:'var(--border)' }}/>
@@ -261,18 +262,18 @@ function AddPatientModal({ doctorUid, doctorName, clinicName, onClose, onAdded }
                   style={{ resize:'none' }}/>
               </div>
               {err&&<div style={{ padding:'9px 12px', borderRadius:9, fontSize:12,
-                background:'var(--danger-light)', color:'var(--danger)' }}>❌ {err}</div>}
+                background:'var(--danger-light)', color:'var(--danger)' }}><IcX size={12} color='var(--danger)'/> {err}</div>}
               <button onClick={addManual} disabled={loading} style={{
                 width:'100%', padding:'13px', borderRadius:14, border:'none',
                 background: loading?'var(--surface2)':'#1D4ED8',
                 color:loading?'var(--text3)':'white', fontWeight:800, fontSize:14, cursor:'pointer'
-              }}>{loading?'⏳ Сохранение...':'➕ Добавить пациента'}</button>
+              }}>{loading ? 'Добавление...' : <><IcPlus size={16}/> Добавить пациента</>}</button>
             </div>
           )}
 
           {err&&mode==='qr'&&(
             <div style={{ marginTop:10, padding:'9px 12px', borderRadius:9,
-              fontSize:12, background:'var(--danger-light)', color:'var(--danger)' }}>❌ {err}</div>
+              fontSize:12, background:'var(--danger-light)', color:'var(--danger)' }}><IcX size={12} color='var(--danger)'/> {err}</div>
           )}
         </div>
       </div>
@@ -299,12 +300,12 @@ function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved
   const [items, setItems] = useState([newItem()])
 
   const TYPES=[
-    {v:'medication',  l:'💊 Препарат'},
-    {v:'exercise',    l:'🏃 ЛФК/Упражнение'},
-    {v:'procedure',   l:'🩺 Процедура'},
-    {v:'appointment', l:'📅 Визит к врачу'},
-    {v:'restriction', l:'⚠️ Ограничение'},
-    {v:'nutrition',   l:'🥗 Диета/Питание'},
+    {v:'medication',  l:'Препарат'},
+    {v:'exercise',    l:'ЛФК/Упражнение'},
+    {v:'procedure',   l:'Процедура'},
+    {v:'appointment', l:'Визит к врачу'},
+    {v:'restriction', l:'Ограничение'},
+    {v:'nutrition',   l:'Диета/Питание'},
   ]
 
   const ROUTES = ['Внутрь (перорально)','Сублингвально','В/м инъекция','В/в инъекция',
@@ -401,7 +402,7 @@ function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved
         {/* Header */}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
           <div>
-            <div style={{fontWeight:800,fontSize:17}}>📋 Назначения</div>
+            <div style={{fontWeight:800,fontSize:17}}>Назначения</div>
             <div style={{fontSize:12,color:'var(--text3)'}}>для {patient.patient_name}</div>
           </div>
           <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:24,color:'var(--text3)'}}>×</button>
@@ -416,7 +417,7 @@ function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved
 
         {/* Mode tabs */}
         <div style={{display:'flex',gap:6,marginBottom:14}}>
-          {[['manual','✏️ Вручную'],['photo','📷 Фото выписки']].map(([m,l])=>(
+          {[['manual','Вручную'],['photo','Фото выписки']].map(([m,l])=>(
             <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:'9px',borderRadius:10,
               cursor:'pointer',border:`1.5px solid ${mode===m?'#1D4ED8':'var(--border)'}`,
               background:mode===m?'#EFF6FF':'white',color:mode===m?'#1D4ED8':'var(--text3)',
@@ -432,14 +433,14 @@ function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved
             <label htmlFor="rx-img" style={{display:'block',padding:16,borderRadius:12,cursor:'pointer',
               border:'2px dashed var(--border)',background:'var(--surface2)',textAlign:'center',
               fontSize:13,color:'var(--text3)'}}>
-              {file?`📎 ${file.name}`:'📷 Выбрать фото выписки'}
+              {file ? file.name : 'Выбрать фото выписки'}
             </label>
             {file && (
               <button onClick={analyzePhoto} disabled={loading} style={{width:'100%',marginTop:8,
                 padding:'11px',borderRadius:10,border:'none',
                 background:loading?'var(--surface2)':'#1D4ED8',
                 color:loading?'var(--text3)':'white',fontWeight:700,fontSize:13,cursor:'pointer'}}>
-                {loading?'⏳ Анализирую...':'🤖 Анализировать ИИ'}
+                {loading?'Анализирую...':'Анализировать'}
               </button>
             )}
           </div>
@@ -591,7 +592,7 @@ function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved
                           style={{resize:'none',fontSize:12}}/>
                       </div>
                       <div>
-                        <label className="label">📋 Особые инструкции</label>
+                        <label className="label">Особые инструкции</label>
                         <textarea className="input" placeholder="Хранить в холодильнике, не делить таблетку..."
                           rows={2} value={item.special_instructions||''}
                           onChange={e=>upd(i,'special_instructions',e.target.value)}
@@ -623,7 +624,7 @@ function PrescriptionSheet({ patient, doctorUid, doctorProfile, onClose, onSaved
             width:'100%',marginTop:16,padding:'14px',borderRadius:14,border:'none',
             background:loading?'var(--surface2)':'#1D4ED8',
             color:loading?'var(--text3)':'white',fontWeight:800,fontSize:15,cursor:'pointer'}}>
-            {loading?'⏳ Отправка...':'📨 Отправить запрос пациенту'}
+            {loading?'⏳ Отправка...':'Отправить запрос пациенту'}
           </button>
         )}
       </div>
@@ -660,7 +661,7 @@ function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
     <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
       {showPrescription&&(
         <PrescriptionSheet patient={patient} doctorUid={doctorUid} doctorProfile={doctorProfile} onClose={()=>setShowPrescription(false)}
-          onSaved={n=>{setMsg(`✅ ${n} назначений добавлено`);setShowPrescription(false);setTimeout(()=>setMsg(''),3000)}}/>
+          onSaved={n=>{setMsg(`${n} назначений добавлено`);setShowPrescription(false);setTimeout(()=>setMsg(''),3000)}}/>
       )}
 
       <div className="page-header" style={{background:'linear-gradient(135deg,#EFF6FF,#F0FDFA)'}}>
@@ -674,7 +675,7 @@ function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
           <div>
             <div style={{fontWeight:700,fontSize:15}}>{patient.patient_name}</div>
             <div style={{fontSize:11,color:'var(--text3)'}}>
-              {patient.has_account?'🟢 Есть аккаунт MedNOTE':'⚪ Без аккаунта'}
+              {patient.has_account?'● Есть аккаунт MedNOTE':'○ Без аккаунта'}
               {patient.phone&&` · ${patient.phone}`}
             </div>
           </div>
@@ -690,13 +691,13 @@ function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
         {patient.has_account&&(
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
             {[
-              ['📊',adherence!==null?adherence+'%':'—','Выполнено','#1D4ED8'],
-              ['📋',todayItems.length,'Сегодня','var(--primary)'],
-              ['📅',items.length,'Предстоит','var(--success)'],
+              [<IcBarChart size={22}/>,adherence!==null?adherence+'%':'—','Выполнено','#1D4ED8'],
+              [<IcClipboard size={22}/>,todayItems.length,'Сегодня','var(--primary)'],
+              [<IcCalendar size={22}/>,items.length,'Предстоит','var(--success)'],
             ].map(([ic,v,l,c])=>(
               <div key={l} style={{background:'white',borderRadius:12,padding:'12px 8px',
                 border:'1px solid var(--border)',textAlign:'center'}}>
-                <div style={{fontSize:18,marginBottom:3}}>{ic}</div>
+                <div style={{display:'flex',justifyContent:'center',marginBottom:3}}>{ic}</div>
                 <div style={{fontSize:20,fontWeight:900,color:c}}>{v}</div>
                 <div style={{fontSize:10,color:'var(--text3)',marginTop:1}}>{l}</div>
               </div>
@@ -709,7 +710,7 @@ function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
           width:'100%',padding:'14px',borderRadius:14,border:'none',
           background:'linear-gradient(135deg,#1D4ED8,#2563EB)',
           color:'white',fontWeight:800,fontSize:15,cursor:'pointer'
-        }}>💊 Добавить назначения</button>
+        }}><IcPlus size={16}/> Добавить назначения</button>
 
         {/* Upcoming */}
         {items.length>0&&<>
@@ -721,7 +722,7 @@ function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
               padding:'10px 12px',borderRadius:10,
               background:item.done?'var(--success-light)':'white',
               border:`1px solid ${item.done?'#A7F3D0':'var(--border)'}`}}>
-              <span style={{fontSize:15}}>{item.done?'✅':'⬜'}</span>
+              <span style={{fontSize:15}}>{item.done ? <IcCheckCircle size={16} color='var(--success)'/> : <span style={{display:'inline-block',width:16,height:16,borderRadius:'50%',border:'2px solid var(--border2)'}}/>}</span>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                   {item.title}
@@ -733,7 +734,7 @@ function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
               </div>
               {item.added_by==='doctor'&&(
                 <span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:10,
-                  background:'#EFF6FF',color:'#1D4ED8',flexShrink:0}}>👨‍⚕️</span>
+                  background:'#EFF6FF',color:'#1D4ED8',flexShrink:0}}><IcDoctor size={12}/></span>
               )}
             </div>
           ))}
@@ -742,7 +743,7 @@ function PatientDetail({ patient, onBack, doctorUid, doctorProfile }) {
         {patient.notes&&(
           <div style={{background:'var(--surface2)',borderRadius:12,padding:'12px 14px',
             border:'1px solid var(--border)',fontSize:12,color:'var(--text2)',lineHeight:1.6}}>
-            📋 {patient.notes}
+            {patient.notes}
           </div>
         )}
       </div>
@@ -770,7 +771,7 @@ export default function DoctorPatients() {
 
   function onAdded(name) {
     setShowAdd(false)
-    setMsg(`✅ ${name} добавлен в список пациентов`)
+    setMsg(`${name} добавлен в список пациентов`)
     setTimeout(()=>setMsg(''),3000)
   }
 
@@ -809,7 +810,7 @@ export default function DoctorPatients() {
 
         {/* Search */}
         {patients.length>3&&(
-          <input className="input" placeholder="🔍 Поиск по имени..."
+          <input className="input" placeholder="Поиск по имени..."
             value={search} onChange={e=>setSearch(e.target.value)}/>
         )}
 
@@ -838,7 +839,7 @@ export default function DoctorPatients() {
 
         {filtered.length===0?(
           <div style={{textAlign:'center',padding:'40px 20px',color:'var(--text3)'}}>
-            <div style={{fontSize:48,marginBottom:16}}>👥</div>
+            <IcUsers size={48} color="var(--border2)" style={{marginBottom:16}}/>
             <div style={{fontWeight:700,fontSize:16,marginBottom:8}}>Нет пациентов</div>
             <div style={{fontSize:13,lineHeight:1.7}}>
               Нажмите «+ Добавить» чтобы добавить пациента по QR-коду или вручную
@@ -863,8 +864,8 @@ export default function DoctorPatients() {
                 </div>
                 <div style={{fontSize:11,color:'var(--text3)',marginTop:2,display:'flex',gap:6}}>
                   {p.has_account
-                    ?<span style={{color:'var(--success)',fontWeight:600}}>🟢 MedNOTE</span>
-                    :<span style={{color:'var(--text3)'}}>⚪ Без аккаунта</span>}
+                    ?<span style={{color:'var(--success)',fontWeight:600}}><span style={{color:'var(--success)'}}>●</span> MedNOTE</span>
+                    :<span style={{color:'var(--text3)'}}><span>○</span> Без аккаунта</span>}
                   {p.phone&&<span>· {p.phone}</span>}
                 </div>
               </div>

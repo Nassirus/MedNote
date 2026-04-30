@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { analyzeWithGemini } from '../lib/geminiClient'
+import { TypeIcon, IcClock, IcCalendar, IcRepeat, IcAlert, IcCamera, IcFileText, IcX, IcCheck, IcInfo } from '../components/Icons'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
 import {
   format, addDays, startOfMonth, endOfMonth,
@@ -63,13 +64,13 @@ function PreviewCard({ item, onChange }) {
   // Compute summary text
   const summary = []
   if (item.time_slots?.length > 1) {
-    summary.push(`⏰ ${item.time_slots.join(', ')}`)
+    summary.push(`${item.time_slots.join(', ')}`)
   } else if (item.time_slots?.[0]) {
-    summary.push(`⏰ ${item.time_slots[0]}`)
+    summary.push(`${item.time_slots[0]}`)
   }
-  if (item.duration_days) summary.push(`📆 ${item.duration_days} дн.`)
-  else if (item.is_one_time) summary.push('📅 Разово')
-  else summary.push('⚠️ Укажите срок!')
+  if (item.duration_days) summary.push(`${item.duration_days} дн.`)
+  else if (item.is_one_time) summary.push('Разово')
+  else summary.push('⚠ Укажите срок')
   if (item.dose) summary.push(item.dose)
 
   if (!open) return (
@@ -86,10 +87,10 @@ function PreviewCard({ item, onChange }) {
           {item.title}{item.dose ? ` — ${item.dose}` : ''}
         </div>
         <div style={{ fontSize:11, color:'var(--text3)', marginTop:3, display:'flex', gap:6, flexWrap:'wrap' }}>
-          {summary.map((s,i) => <span key={i} style={{color: s.startsWith('⚠️') ? '#F59E0B' : undefined, fontWeight: s.startsWith('⚠️') ? 700 : undefined}}>{s}</span>)}
-          {item.confidence === 'low' && <span style={{ color:'var(--warning)', fontWeight:600 }}>❓ неточно</span>}
-          {item.needs_date && <span style={{ background:'var(--warning-light)', color:'var(--warning)', padding:'1px 6px', borderRadius:10, fontWeight:700 }}>📅 нужна дата</span>}
-          {item.kp_source && <span style={{ background:'#F0FDF4', color:'#16A34A', padding:'1px 6px', borderRadius:10, fontWeight:700, fontSize:9 }}>📋 {item.kp_source}</span>}
+          {summary.map((s,i) => <span key={i} style={{color: s.startsWith('⚠') ? '#F59E0B' : undefined, fontWeight: s.startsWith('⚠') ? 700 : undefined}}>{s}</span>)}
+          {item.confidence === 'low' && <span style={{ color:'var(--warning)', fontWeight:600, display:'flex', alignItems:'center', gap:2 }}><IcAlert size={10}/>неточно</span>}
+          {item.needs_date && <span style={{ background:'var(--warning-light)', color:'var(--warning)', padding:'1px 6px', borderRadius:10, fontWeight:700 }}>нужна дата</span>}
+          {item.kp_source && <span style={{ background:'#F0FDF4', color:'#16A34A', padding:'1px 6px', borderRadius:10, fontWeight:700, fontSize:9 }}>{item.kp_source}</span>}
         </div>
         {!item.duration_days && !item.is_one_time && item.sel && (
           <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:6, flexWrap:'wrap' }}>
@@ -110,7 +111,7 @@ function PreviewCard({ item, onChange }) {
         background: item.sel ? cfg.color : 'white', flexShrink:0,
         display:'flex', alignItems:'center', justifyContent:'center', marginTop:2
       }}>
-        {item.sel && <span style={{ color:'white', fontSize:10, fontWeight:700 }}>✓</span>}
+        {item.sel && <IcCheck size={10} color='white' sw={3}/>}
       </button>
     </div>
   )
@@ -194,7 +195,7 @@ function PreviewCard({ item, onChange }) {
           <div className="label">{item.is_one_time ? 'Дата' : 'Дата начала курса'}</div>
           <MiniCalendar selected={startDate} onChange={d => { setStartDate(d); onChange({ ...item, start_date: format(d,'yyyy-MM-dd') }) }} />
           <div style={{ fontSize:11, color:'var(--primary)', fontWeight:600, marginTop:6, textAlign:'center' }}>
-            📅 {format(startDate,'d MMMM yyyy',{locale:ru})}
+            {format(startDate,'d MMMM yyyy',{locale:ru})}
             {item.duration_days && ` — ${format(addDays(startDate,item.duration_days-1),'d MMMM',{locale:ru})}`}
           </div>
         </div>
@@ -418,7 +419,7 @@ export default function Upload({ onAddItems }) {
     <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
       <div className="page-header"><h1 style={{fontWeight:700,fontSize:17}}>ИИ-анализ</h1></div>
       <div className="page-content" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,textAlign:'center'}}>
-        <div style={{fontSize:56}}>🎉</div>
+        <IcCheckCircle size={56} color="var(--success)"/>
         <h2 style={{fontWeight:700,fontSize:20,color:'var(--text)'}}>Добавлено в расписание!</h2>
         <p style={{color:'var(--text3)',fontSize:13,maxWidth:280}}>Перейдите в «Сегодня» или «Календарь»</p>
         <button className="btn btn-primary" onClick={reset} style={{padding:'11px 28px'}}>Анализировать ещё</button>
@@ -458,7 +459,7 @@ export default function Upload({ onAddItems }) {
       <div className="page-content">
 
         <div style={{background:'var(--success-light)',border:'1px solid #A7F3D0',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:12,color:'var(--success)',display:'flex',gap:10}}>
-          <span style={{fontSize:18}}>🏠</span>
+          <span style={{fontSize:18}}></span>
           <div><strong>Только домашние назначения</strong><br/><span style={{fontSize:11,opacity:0.8}}>Курсы разбиты по дням · Несколько приёмов → отдельные записи</span></div>
         </div>
 
@@ -503,11 +504,11 @@ export default function Upload({ onAddItems }) {
           border: `1px solid ${_hasKey ? '#BBF7D0' : '#FECACA'}`
         }}>
           {_hasKey
-            ? '✅ Прямой AI (без ограничений по времени)'
-            : '⚠️ Серверный AI (лимит 10 сек) — добавьте VITE_GEMINI_API_KEY в Vercel и передеплойте'}
+            ? 'Прямой AI (без ограничений)'
+            : 'Серверный AI (лимит 10 сек) — добавьте VITE_GEMINI_API_KEY'}
         </div>
         <div style={{background:'var(--primary-light)',border:'1px solid var(--primary-border)',borderRadius:12,padding:'12px 15px',marginBottom:14,display:'flex',gap:10}}>
-          <span style={{fontSize:18}}>🤖</span>
+          <IcBot size={18}/>
           <div>
             <div style={{fontWeight:700,fontSize:13,color:'var(--primary)'}}>Gemini AI — умный анализ</div>
             <div style={{fontSize:11,color:'var(--text2)',marginTop:2,lineHeight:1.5}}>
@@ -517,7 +518,7 @@ export default function Upload({ onAddItems }) {
         </div>
 
         <div style={{display:'flex',background:'var(--surface2)',borderRadius:10,padding:3,marginBottom:14}}>
-          {[['photo','📸 Фото'],['text','📋 Текст']].map(([m,l])=>(
+          {[['photo','Фото'],['text','Текст']].map(([m,l])=>(
             <button key={m} onClick={()=>{setMode(m);setFile(null);setText('');setErr('')}} style={{
               flex:1,padding:'9px',borderRadius:8,border:'none',fontWeight:600,fontSize:13,
               background:mode===m?'white':'transparent',
@@ -534,7 +535,7 @@ export default function Upload({ onAddItems }) {
                 {file.preview
                   ? <img src={file.preview} alt="preview" style={{width:'100%',maxHeight:220,objectFit:'contain',borderRadius:12,border:'1px solid var(--border)',background:'var(--surface2)'}}/>
                   : <div style={{background:'var(--surface2)',borderRadius:12,border:'1px solid var(--border)',padding:'24px 16px',textAlign:'center'}}>
-                      <div style={{fontSize:32,marginBottom:6}}>📄</div>
+                      <IcFileText size={32} color="var(--text3)" style={{marginBottom:6}}/>
                       <div style={{fontSize:13,fontWeight:600,color:'var(--text2)'}}>{file.name}</div>
                       <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>Готово к анализу</div>
                     </div>
@@ -543,7 +544,7 @@ export default function Upload({ onAddItems }) {
               </div>
             ) : (
               <div onClick={()=>fileRef.current.click()} style={{border:'2px dashed var(--primary-border)',borderRadius:14,padding:'32px 20px',textAlign:'center',cursor:'pointer',background:'white',marginBottom:14}}>
-                <div style={{fontSize:38,marginBottom:8}}>📸</div>
+                <div style={{fontSize:38,marginBottom:8}}><IcCamera size={18}/></div>
                 <div style={{fontWeight:700,fontSize:14,color:'var(--text2)'}}>Нажмите для загрузки</div>
                 <div style={{fontSize:12,color:'var(--text3)',marginTop:6,lineHeight:1.6}}>Фото выписки, рецепта<br/>JPG, PNG, HEIC</div>
               </div>
@@ -555,7 +556,7 @@ export default function Upload({ onAddItems }) {
             <textarea className="input" value={text} onChange={e=>setText(e.target.value)}
               placeholder={'Вставьте текст выписки...\n\nПример:\nАспирин 100мг — утром после еды, 14 дней\nЛФК — ежедневно 30 минут\nМетформин 500мг — 2 раза в день, 1 месяц\nВизит к терапевту через 2 недели'}
               rows={9} style={{resize:'vertical',lineHeight:1.7}}/>
-            <button onClick={()=>fileRef.current.click()} className="btn btn-ghost" style={{marginTop:8,width:'100%',fontSize:13}}>📎 Загрузить файл</button>
+            <button onClick={()=>fileRef.current.click()} className="btn btn-ghost" style={{marginTop:8,width:'100%',fontSize:13}}>Загрузить файл</button>
             <input ref={fileRef} type="file" accept=".txt,.doc,.docx,.pdf" onChange={handleFile} style={{display:'none'}}/>
           </div>
         )}
@@ -567,7 +568,7 @@ export default function Upload({ onAddItems }) {
         <button className="btn btn-primary" onClick={analyze}
           disabled={mode==='photo'?!file?.base64:!text.trim()}
           style={{width:'100%',padding:13,fontSize:14,opacity:(mode==='photo'?!file?.base64:!text.trim())?0.5:1}}>
-          🤖 Анализировать с Gemini AI
+          <IcBot size={16}/> Анализировать с Gemini AI
         </button>
       </div>
     </div>

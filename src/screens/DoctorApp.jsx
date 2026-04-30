@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import NavIcon from '../components/NavIcon'
+import { IcDoctor } from '../components/Icons'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import DoctorPatients from './doctor/DoctorPatients'
 import DoctorCalendar from './doctor/DoctorCalendar'
@@ -37,7 +38,7 @@ export default function DoctorApp() {
           <div style={{ padding:'20px 18px 16px', borderBottom:'1px solid rgba(255,255,255,.1)', flexShrink:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
               <div style={{ width:36, height:36, borderRadius:10, background:'#1D4ED8',
-                display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>👨‍⚕️</div>
+                display:'flex', alignItems:'center', justifyContent:'center' }}><IcDoctor size={20} color='white'/></div>
               <div>
                 <div style={{ fontWeight:800, fontSize:15, color:'white' }}>MedNOTE</div>
                 <div style={{ fontSize:10, color:'rgba(255,255,255,.4)' }}>Врачебный кабинет</div>

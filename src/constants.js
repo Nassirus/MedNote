@@ -1,12 +1,12 @@
 export const TYPE_CONFIG = {
-  medication:  { icon: '💊', color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', label: 'Препарат'    },
-  exercise:    { icon: '🏃', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', label: 'Упражнение'  },
-  procedure:   { icon: '🩺', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', label: 'Процедура'   },
-  appointment: { icon: '📅', color: '#DC2626', bg: '#FEF2F2', border: '#FECACA', label: 'Визит'        },
-  restriction: { icon: '⚠️',  color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', label: 'Ограничение' },
-  routine:     { icon: '✅',  color: '#0D9488', bg: '#F0FDFA', border: '#99F6E4', label: 'Рутина'       },
-  nutrition:   { icon: '🥗',  color: '#CA8A04', bg: '#FEFCE8', border: '#FEF08A', label: 'Питание'      },
-  sleep:       { icon: '😴',  color: '#6D28D9', bg: '#EDE9FE', border: '#C4B5FD', label: 'Сон'          },
+  medication:  { color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', label: 'Препарат'    },
+  exercise:    { color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', label: 'Упражнение'  },
+  procedure:   { color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', label: 'Процедура'   },
+  appointment: { color: '#DC2626', bg: '#FEF2F2', border: '#FECACA', label: 'Визит'        },
+  restriction: { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', label: 'Ограничение' },
+  routine:     { color: '#0D9488', bg: '#F0FDFA', border: '#99F6E4', label: 'Рутина'       },
+  nutrition:   { color: '#CA8A04', bg: '#FEFCE8', border: '#FEF08A', label: 'Питание'      },
+  sleep:       { color: '#6D28D9', bg: '#EDE9FE', border: '#C4B5FD', label: 'Сон'          },
 }
 
 export const EVENT_COLORS = [

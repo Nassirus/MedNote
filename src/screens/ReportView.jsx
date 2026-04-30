@@ -49,8 +49,8 @@ export default function ReportView({ items, profile, weekData = [], onBack }) {
       <div className="page-header" style={{ display: 'flex', gap: 10 }}>
         <button className="btn btn-ghost" onClick={onBack} style={{ padding: '7px 12px', fontSize: 13 }}>← Назад</button>
         <h1 style={{ fontWeight: 700, fontSize: 17, flex: 1 }}>Отчёт для врача</h1>
-        <button className="btn btn-ghost" onClick={copyText} style={{ fontSize: 12, padding: '7px 12px' }}>📋 Копировать</button>
-        <button className="btn btn-primary" onClick={print} style={{ fontSize: 12, padding: '7px 14px' }}>🖨️ Печать</button>
+        <button className="btn btn-ghost" onClick={copyText} style={{ fontSize: 12, padding: '7px 12px' }}>Копировать</button>
+        <button className="btn btn-primary" onClick={print} style={{ fontSize: 12, padding: '7px 14px' }}><IcPrinter size={14}/> Печать</button>
       </div>
 
       <div className="page-content">
@@ -136,10 +136,10 @@ export default function ReportView({ items, profile, weekData = [], onBack }) {
                         {item.notes && <div style={{ fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.notes}</div>}
                       </div>
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--text2)' }}>⏰ {item.time}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)' }}><IcClock size={11}/> {item.time}</div>
                     <div style={{ fontSize: 11, color: 'var(--text3)' }}>{item.freq}</div>
                     <div style={{ padding: '3px 8px', borderRadius: 20, background: item.done ? '#D1FAE5' : '#FEE2E2', fontSize: 10, fontWeight: 700, color: item.done ? '#059669' : '#DC2626', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                      {item.done ? '✓ Выполнено' : '○ Ожидает'}
+                      {item.done ? <><IcCheck size={12}/> Выполнено</> : 'Ожидает'}
                     </div>
                   </div>
                 )

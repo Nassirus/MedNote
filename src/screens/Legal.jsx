@@ -2,7 +2,7 @@ export default function Legal({ doc, onBack }) {
   const docs = {
     terms: {
       title: 'Условия использования',
-      icon: '📋',
+      Icon: IcClipboard,
       content: [
         {
           heading: '1. Общие положения',
@@ -41,7 +41,7 @@ export default function Legal({ doc, onBack }) {
 
     privacy: {
       title: 'Политика конфиденциальности',
-      icon: '🔒',
+      Icon: IcLock,
       content: [
         {
           heading: '1. Кто обрабатывает ваши данные',
@@ -80,7 +80,7 @@ export default function Legal({ doc, onBack }) {
 
     dataprocessing: {
       title: 'Согласие на обработку персональных данных',
-      icon: '✍️',
+      Icon: IcPencil,
       content: [
         {
           heading: 'Субъект данных',
@@ -142,9 +142,9 @@ export default function Legal({ doc, onBack }) {
       {/* Document tabs */}
       <div style={{ background: 'white', borderBottom: '1px solid var(--border)', padding: '0 16px', display: 'flex', gap: 0, overflowX: 'auto' }}>
         {[
-          ['terms', '📋 Условия'],
-          ['privacy', '🔒 Конфиденциальность'],
-          ['dataprocessing', '✍️ Обработка данных'],
+          ['terms', 'Условия'],
+          ['privacy', 'Конфиденциальность'],
+          ['dataprocessing', 'Обработка данных'],
         ].map(([k, l]) => (
           <button key={k} onClick={() => onBack(k)} style={{
             padding: '12px 14px', border: 'none', background: 'none',

@@ -28,5 +28,5 @@ export function findClinic(partnerId) {
 }
 
 export function getRoleLabel(role) {
-  return { patient:'👤 Пациент', doctor:'👨‍⚕️ Врач', admin:'⚙️ Администратор' }[role] || '👤 Пациент'
+  return { patient:'Пациент', doctor:'Врач', admin:'Администратор' }[role] || 'Пациент'
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { TYPE_CONFIG, EVENT_COLORS } from '../constants'
-import { TypeIcon, IconRefresh, IconCalendar } from '../components/Icons'
+import { TypeIcon, IcRepeat, IcCalendar, IcTimer, IcAlert, IcX, IcClock } from '../components/Icons'
 import { minsToTime, timeToMins } from '../lib/dateUtils'
 import {
   format, addDays, startOfMonth, endOfMonth,
@@ -192,7 +192,7 @@ export default function AddItemModal({
                 </div>
               </div>
               <div style={{ fontSize:11, color: selColor.hex, fontWeight:600, marginTop:5, textAlign:'center' }}>
-                ⏱ Продолжительность: {durationLabel}
+                <IcTimer size={13}/> Продолжительность: {durationLabel}
               </div>
             </div>
 
@@ -222,7 +222,7 @@ export default function AddItemModal({
             {conflict && (
               <div style={{ padding:12, background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10 }}>
                 <div style={{ fontWeight:600, fontSize:13, color:'#92400E', marginBottom:8 }}>
-                  ⚠️ На {time} уже есть: «{conflict.title}»
+                  <IcAlert size={13}/> На {time} уже есть: «{conflict.title}»
                 </div>
                 <div style={{ display:'flex', gap:8 }}>
                   <button onClick={() => { setConflictChoice('stack'); setErr('') }} style={{
@@ -230,7 +230,7 @@ export default function AddItemModal({
                     background: conflictChoice==='stack' ? '#D97706' : 'white',
                     color:      conflictChoice==='stack' ? 'white'   : 'var(--text2)',
                     border:    `1.5px solid ${conflictChoice==='stack' ? '#D97706' : 'var(--border)'}`
-                  }}>📌 Разместить рядом</button>
+                  }}>Разместить рядом</button>
                   <button onClick={() => {
                     const free = suggestFree()
                     setConflictChoice('shift')
@@ -241,7 +241,7 @@ export default function AddItemModal({
                     background: conflictChoice==='shift' ? 'var(--primary)' : 'white',
                     color:      conflictChoice==='shift' ? 'white'          : 'var(--text2)',
                     border:    `1.5px solid ${conflictChoice==='shift' ? 'var(--primary)' : 'var(--border)'}`
-                  }}>🔄 Сдвинуть +15 мин</button>
+                  }}>Сдвинуть +15 мин</button>
                 </div>
               </div>
             )}
@@ -268,7 +268,7 @@ export default function AddItemModal({
               </div>
               <div>
                 <div style={{ fontWeight:600, fontSize:13, color:'var(--text)' }}>{title}</div>
-                <div style={{ fontSize:11, color:'var(--text3)' }}>⏰ {time} → {endTime} · {durationLabel}</div>
+                <div style={{ fontSize:11, color:'var(--text3)' }}><IcClock size={11}/> {time} → {endTime} · {durationLabel}</div>
               </div>
             </div>
 
@@ -337,7 +337,7 @@ export default function AddItemModal({
                         style={{ padding:'3px 9px', borderRadius:20, background: selColor.light,
                           color: selColor.hex, fontSize:11, fontWeight:600, cursor:'pointer',
                           border:`1px solid ${selColor.hex}44` }}>
-                        {format(d,'d MMM',{locale:ru})} ✕
+                        {format(d,'d MMM',{locale:ru})} ×
                       </span>
                     ))}
                   </div>
