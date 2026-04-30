@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { IcPill, IcVisit, IcBarChart, IcActivity, IcHeartPulse } from '../components/Icons'
+import { IcPill, IcVisit, IcBarChart, IcActivity, IcHeartPulse, IcPin, IcFilter, IcTrash, IcCheck, IcSearch, IcFileText, IcCalendar, IcStethoscope, IcAlert, IcX } from '../components/Icons'
 import { useNotes } from '../hooks/useNotes'
 import { format, parseISO } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -101,14 +101,14 @@ export default function Notes() {
           background: active.pinned ? 'var(--warning-light)' : 'var(--surface2)',
           border:`1px solid ${active.pinned ? '#FDE68A' : 'var(--border)'}`,
           borderRadius:8, width:30, height:30, fontSize:15, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center'
-        }}>📌</button>
+        }}><IcPin size={14}/></button>
 
         {/* Color */}
         <div style={{ position:'relative' }}>
           <button onClick={() => setShowColorPicker(p=>!p)} style={{
             background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8,
             width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15
-          }}>🎨</button>
+          }}><IcFilter size={14}/></button>
           {showColorPicker && (
             <div style={{ position:'absolute', right:0, top:36, background:'white', border:'1px solid var(--border)', borderRadius:10, padding:8, display:'flex', gap:6, zIndex:50, boxShadow:'var(--shadow-md)' }}>
               {NOTE_COLORS.map(c => (
@@ -125,17 +125,17 @@ export default function Notes() {
         {/* Delete */}
         <button onClick={() => { remove(active.id); setActive(null) }} style={{
           background:'var(--danger-light)', border:'none', borderRadius:8, width:30, height:30, fontSize:14, cursor:'pointer', color:'var(--danger)', display:'flex', alignItems:'center', justifyContent:'center'
-        }}>🗑</button>
+        }}><IcTrash size={14}/></button>
       </div>
 
       {/* Quick insert toolbar */}
       <div style={{ padding:'6px 16px', borderBottom:'1px solid var(--border)', display:'flex', gap:5, overflowX:'auto', flexShrink:0, background: activeBg?.bg || 'white' }}>
         {[
-          ['todo',    '☐ Задача'],
-          ['date',    '📅 Дата'],
+          ['todo',    'Задача'],
+          ['date',    'Дата'],
           ['divider', '― Разделитель'],
-          ['bp',      '🩺 Давление'],
-          ['symptom', '😷 Симптом'],
+          ['bp',      'Давление'],
+          ['symptom', 'Симптом'],
         ].map(([type, label]) => (
           <button key={type} onClick={() => insertBlock(type)} style={{
             padding:'4px 10px', borderRadius:20, border:'1px solid var(--border)', background:'white',
@@ -228,9 +228,9 @@ export default function Notes() {
       <div className="page-content">
         {/* Search + filter */}
         <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-          <input className="input" placeholder="🔍 Поиск..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex:1 }} />
+          <input className="input" placeholder="Поиск..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex:1 }} />
           <div style={{ display:'flex', background:'var(--surface2)', borderRadius:8, padding:2 }}>
-            {[['all','Все'],['pinned','📌']].map(([k,l]) => (
+            {[['all','Все'],['pinned', <><IcPin size={12}/> Закреп.</>]].map(([k,l]) => (
               <button key={k} onClick={() => setFilter(k)} style={{
                 padding:'6px 10px', borderRadius:6, border:'none', fontSize:12, fontWeight:600,
                 background: filter===k ? 'white' : 'transparent',
@@ -243,7 +243,7 @@ export default function Notes() {
 
         {filtered.length === 0 && (
           <div style={{ textAlign:'center', padding:'48px 0', color:'var(--text3)' }}>
-            <div style={{ fontSize:44, marginBottom:12 }}>{search ? '🔍' : '📝'}</div>
+            <div style={{ marginBottom:12 }}>{search ? <IcSearch size={44} color='var(--border2)'/> : <IcFileText size={44} color='var(--border2)'/>}</div>
             <div style={{ fontWeight:600, fontSize:15, marginBottom:6 }}>{search ? 'Ничего не найдено' : 'Нет заметок'}</div>
             <p style={{ fontSize:13, marginBottom:16, lineHeight:1.6, maxWidth:260, margin:'0 auto 16px' }}>
               {!search && 'Создайте заметку или выберите шаблон для быстрого старта'}
@@ -272,7 +272,7 @@ export default function Notes() {
                 onMouseEnter={e => { e.currentTarget.style.boxShadow='var(--shadow-md)'; e.currentTarget.style.transform='translateY(-2px)' }}
                 onMouseLeave={e => { e.currentTarget.style.boxShadow='var(--shadow)'; e.currentTarget.style.transform='translateY(0)' }}>
                 {n.pinned && (
-                  <div style={{ position:'absolute', top:10, right:10, fontSize:13 }}>📌</div>
+                  <div style={{ position:'absolute', top:10, right:10 }}><IcPin size={13} color='var(--primary)'/></div>
                 )}
                 <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingRight: n.pinned ? 20 : 0 }}>
                   {n.title || 'Без названия'}

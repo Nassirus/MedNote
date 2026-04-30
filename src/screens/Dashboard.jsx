@@ -156,8 +156,8 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
         </div>
       </div>
 
-      <div className="page-content">
-        <div className="desktop-dashboard-layout">
+      <div className="page-content" style={{ display:'flex', flexDirection:'column' }}>
+        <div className="desktop-dashboard-layout" style={{ flex:1, display:'flex', flexDirection:'column' }}>
         <div className="desktop-main-col">
         {/* Desktop stats row */}
         <style>{`@media(min-width:1100px){.dash-stats{display:grid!important}}`}</style>
@@ -267,7 +267,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
         </div>
 
         {/* List */}
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:8, flex:1 }}>
           {filtered.length === 0 && (
             <div className="empty-state">
               <div style={{ fontSize:48, marginBottom:12 }}>
