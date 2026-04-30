@@ -157,7 +157,7 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
       </div>
 
       <div className="page-content" style={{ display:'flex', flexDirection:'column' }}>
-        <div className="desktop-dashboard-layout" style={{ flex:1, display:'flex', flexDirection:'column' }}>
+        <div className="desktop-dashboard-layout">
         <div className="desktop-main-col">
         {/* Desktop stats row */}
         <style>{`@media(min-width:1100px){.dash-stats{display:grid!important}}`}</style>
@@ -390,22 +390,63 @@ export default function Dashboard({ items, toggle, add, remove, update, dbError,
       {selected && <ItemModal item={selected} onClose={() => setSelected(null)} onDelete={remove} onDeleteGroup={() => {}} onDeleteDates={() => {}} onToggle={toggle} onUpdate={update} allItems={items} />}
         </div>
         {/* ── Desktop sidebar panel ── */}
-        <div className="desktop-side-col" style={{display:'flex',flexDirection:'column',gap:16}}>
+        <div className="desktop-side-col">
+
+          {/* Stats card */}
           <div className="card" style={{padding:'20px'}}>
-            <div style={{fontWeight:700,fontSize:15,marginBottom:12}}>Статистика</div>
-            <div style={{display:'flex',flexDirection:'column',gap:10}}>
-              <div style={{display:'flex',justifyContent:'space-between',fontSize:13}}>
-                <span style={{color:'var(--text3)'}}>Сегодня</span>
-                <span style={{fontWeight:700,color:'var(--primary)'}}>{done}/{total}</span>
-              </div>
-              <div style={{height:6,background:'var(--surface2)',borderRadius:99}}>
-                <div style={{height:'100%',borderRadius:99,background:'var(--primary)',width:total>0?(done/total*100)+'%':'0%',transition:'width .4s'}}></div>
-              </div>
-              <div style={{fontSize:12,color:'var(--text3)',textAlign:'right'}}>
-                {total>0?Math.round(done/total*100):0}% выполнено
+            <div style={{fontWeight:700,fontSize:15,marginBottom:16,color:'var(--text)'}}>Статистика дня</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              {[
+                ['Выполнено', `${done} из ${total}`, done===total&&total>0?'var(--success)':'var(--primary)'],
+                ['Осталось', `${total-done}`, 'var(--warning)'],
+                ['Выполнение', `${total>0?Math.round(done/total*100):0}%`, 'var(--primary)'],
+              ].map(([label,val,color])=>(
+                <div key={label} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <span style={{fontSize:13,color:'var(--text3)'}}>{label}</span>
+                  <span style={{fontSize:14,fontWeight:800,color}}>{val}</span>
+                </div>
+              ))}
+              <div style={{height:8,background:'var(--surface2)',borderRadius:99,marginTop:4}}>
+                <div style={{height:'100%',borderRadius:99,background:'var(--primary)',
+                  width:total>0?(done/total*100)+'%':'0%',transition:'width .5s ease',
+                  background:done===total&&total>0?'var(--success)':'var(--primary)'}}/>
               </div>
             </div>
           </div>
+
+          {/* Upcoming next item */}
+          {upcoming && (
+            <div className="card" style={{padding:'20px'}}>
+              <div style={{fontWeight:700,fontSize:13,color:'var(--text3)',
+                textTransform:'uppercase',letterSpacing:.5,marginBottom:12}}>
+                Следующее
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:40,height:40,borderRadius:10,
+                  background:(TYPE_CONFIG[upcoming.type]||TYPE_CONFIG.routine).bg,
+                  display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <TypeIcon type={upcoming.type} size={20}
+                    color={(TYPE_CONFIG[upcoming.type]||TYPE_CONFIG.routine).color}/>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:600,fontSize:13,overflow:'hidden',
+                    textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{upcoming.title}</div>
+                  <div style={{fontSize:12,color:'var(--text3)',marginTop:2}}>{upcoming.time}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Quick add */}
+          <button onClick={() => setShowAdd(true)} style={{
+            width:'100%',padding:'14px',borderRadius:14,border:'none',
+            background:'var(--primary)',color:'white',fontWeight:700,
+            fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',
+            justifyContent:'center',gap:8,boxShadow:'0 4px 12px rgba(37,99,235,.3)'
+          }}>
+            <IcPlus size={18} color="white"/> Добавить назначение
+          </button>
+
         </div>
         </div>
     </div>
