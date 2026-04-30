@@ -97,7 +97,8 @@ function Inner() {
         return <Profile items={items}
           onOpenReport={() => setOverlay('report')}
           onOpenEvents={() => setOverlay('events')}
-          onOpenRequests={() => setOverlay('requests')}/>
+          onOpenRequests={() => setOverlay('requests')}
+          onNavigate={setScreen}/>
       default:
         return <Dashboard items={items} toggle={toggle} add={add} remove={remove}
           update={update} dbError={dbError}
